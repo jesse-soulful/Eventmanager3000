@@ -14,3 +14,4 @@ export interface ModuleWithLineItems extends BaseModule {
   lineItems: any[]; // Will be typed based on module type
 }
 
+

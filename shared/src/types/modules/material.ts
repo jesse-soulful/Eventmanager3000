@@ -24,3 +24,4 @@ export interface UpdateMaterialLineItemInput extends UpdateLineItemInput {
   isRental?: boolean;
 }
 
+

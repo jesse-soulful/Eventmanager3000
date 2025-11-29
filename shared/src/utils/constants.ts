@@ -25,3 +25,4 @@ export const MODULE_COLORS: Record<ModuleType, string> = {
   [ModuleType.MARKETING]: '#EC4899'
 };
 
+

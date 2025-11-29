@@ -70,3 +70,4 @@ categoryRoutes.delete('/:id', async (req, res) => {
   }
 });
 
+

@@ -36,3 +36,4 @@ export interface UpdateEventInput {
   status?: EventStatus;
 }
 
+

@@ -76,3 +76,4 @@ export function CategoryModal({ category, onClose, onSave }: CategoryModalProps)
   );
 }
 
+

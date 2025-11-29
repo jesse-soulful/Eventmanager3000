@@ -33,3 +33,4 @@ export interface UpdateArtistLineItemInput extends UpdateLineItemInput {
   paymentTerms?: string;
 }
 
+

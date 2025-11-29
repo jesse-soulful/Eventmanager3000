@@ -27,3 +27,4 @@ export interface UpdateFoodBeverageLineItemInput extends UpdateLineItemInput {
   allergens?: string[];
 }
 
+
