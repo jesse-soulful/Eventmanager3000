@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Plus, ArrowLeft, ChevronDown, ChevronRight, Edit2, Trash2, MessageSquare, Users, DollarSign, TrendingUp, TrendingDown, X } from 'lucide-react';
+import { Plus, ArrowLeft, ChevronDown, ChevronRight, Edit2, Trash2, MessageSquare, Users, DollarSign, TrendingUp, TrendingDown, X, FileText } from 'lucide-react';
 import { modulesApi, lineItemsApi, statusesApi, categoriesApi, tagsApi, subLineItemTypesApi, commentsApi } from '../lib/api';
 import type { LineItem, Status, Category, Tag, SubLineItemType, ModuleType } from '@event-management/shared';
 import { ModuleType as ModuleTypeEnum } from '@event-management/shared';
@@ -11,6 +11,7 @@ import { InlineAmountInput } from '../components/InlineAmountInput';
 import { InlineTextInput } from '../components/InlineTextInput';
 import { CommentsModal } from '../components/CommentsModal';
 import { FileAttachmentsButton } from '../components/FileAttachmentsButton';
+import { ItineraryModal } from '../components/ItineraryModal';
 import { formatCurrency } from '../lib/utils';
 
 export function ArtistsPage() {
@@ -25,6 +26,8 @@ export function ArtistsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSubLineItemModal, setShowSubLineItemModal] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [showItineraryModal, setShowItineraryModal] = useState(false);
+  const [itineraryArtist, setItineraryArtist] = useState<LineItem | null>(null);
   const [commentsLineItemId, setCommentsLineItemId] = useState<string | null>(null);
   const [commentsLineItemName, setCommentsLineItemName] = useState<string>('');
   const [commentCounts, setCommentCounts] = useState<Map<string, number>>(new Map());
@@ -653,6 +656,16 @@ export function ArtistsPage() {
                   <div className="flex gap-2 flex-shrink-0">
                     <button
                       onClick={() => {
+                        setItineraryArtist(artist);
+                        setShowItineraryModal(true);
+                      }}
+                      className="btn btn-secondary"
+                      title="View/Export Itinerary"
+                    >
+                      <FileText className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
                         setEditingItem(artist);
                         setShowCreateModal(true);
                       }}
@@ -835,6 +848,21 @@ export function ArtistsPage() {
             if (commentsLineItemId) {
               loadCommentCounts([commentsLineItemId]);
             }
+          }}
+        />
+      )}
+
+      {showItineraryModal && itineraryArtist && eventId && (
+        <ItineraryModal
+          eventId={eventId}
+          artist={itineraryArtist}
+          subLineItemTypes={subLineItemTypes}
+          onClose={() => {
+            setShowItineraryModal(false);
+            setItineraryArtist(null);
+          }}
+          onSave={() => {
+            loadData();
           }}
         />
       )}

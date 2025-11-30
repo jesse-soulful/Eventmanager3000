@@ -10,12 +10,13 @@
   },
   "dependencies": {
     "@event-management/shared": "*",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.21.1",
     "axios": "^1.6.2",
     "date-fns": "^3.0.0",
-    "lucide-react": "^0.303.0"
+    "jspdf": "^3.0.4",
+    "lucide-react": "^0.303.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.21.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
@@ -33,5 +34,3 @@
     "vite": "^5.0.8"
   }
 }
-
-
