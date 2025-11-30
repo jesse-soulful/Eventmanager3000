@@ -25,7 +25,7 @@ model Category {
 }
 
 model Event {
-  id                  String            @id
+  id                  String            @id @default(uuid())
   name                String
   description         String?
   startDate           DateTime
@@ -42,9 +42,10 @@ model Event {
   technicalPhone      String?
   runningOrder        String?
   bannerImageUrl      String?
+  metadata            String?
   status              String            @default("DRAFT")
   createdAt           DateTime          @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime          @updatedAt
   Category            Category[]
   LineItem            LineItem[]
   Status              Status[]

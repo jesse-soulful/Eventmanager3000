@@ -9,7 +9,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@event-management/shared": "*",
+    "@event-management/shared": "file:../shared",
     "axios": "^1.6.2",
     "date-fns": "^3.0.0",
     "jspdf": "^3.0.4",

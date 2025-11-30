@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Upload, Trash2, Image as ImageIcon } from 'lucide-react';
-import { eventsApi } from '../lib/api';
+import { eventsApi, lineItemsApi } from '../lib/api';
 import type { Event } from '@event-management/shared';
+import { ModuleType as ModuleTypeEnum, StaffRole, STAFF_ROLE_DISPLAY_NAMES } from '@event-management/shared';
+import { StaffSelector } from './StaffSelector';
 import { format } from 'date-fns';
 
 interface EventDetailsModalProps {
@@ -14,18 +16,163 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
   const [editData, setEditData] = useState<Partial<Event>>(event);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+  
+  // Staff references from metadata
+  const getEventMetadata = () => {
+    if (!event.metadata) return {};
+    if (typeof event.metadata === 'string') {
+      try {
+        return JSON.parse(event.metadata) || {};
+      } catch {
+        return {};
+      }
+    }
+    return event.metadata || {};
+  };
+
+  const eventMetadata = getEventMetadata();
+  const [promotorStaff, setPromotorStaff] = useState<{ id: string; name: string; phone?: string; email?: string } | null>(
+    eventMetadata.promotorStaffId && event.promotorName
+      ? { id: eventMetadata.promotorStaffId, name: event.promotorName, phone: event.promotorPhone }
+      : null
+  );
+  const [artistLiaisonStaff, setArtistLiaisonStaff] = useState<{ id: string; name: string; phone?: string; email?: string } | null>(
+    eventMetadata.artistLiaisonStaffId && event.artistLiaisonName
+      ? { id: eventMetadata.artistLiaisonStaffId, name: event.artistLiaisonName, phone: event.artistLiaisonPhone }
+      : null
+  );
+  const [technicalStaff, setTechnicalStaff] = useState<{ id: string; name: string; phone?: string; email?: string } | null>(
+    eventMetadata.technicalStaffId && event.technicalName
+      ? { id: eventMetadata.technicalStaffId, name: event.technicalName, phone: event.technicalPhone }
+      : null
+  );
 
   useEffect(() => {
     setEditData(event);
   }, [event]);
 
+  const handleCreateStaff = async (name: string, phone?: string, email?: string): Promise<{ id: string; name: string; phone?: string; email?: string }> => {
+    // Create staff member in staff pool
+    // Note: For global modules, we still need to provide an eventId (can use current event)
+    // The staff member will be available across all events via the global module API
+    const response = await lineItemsApi.create({
+      moduleType: ModuleTypeEnum.STAFF_POOL,
+      eventId: event.id, // Use current event ID (staff pool items can be filtered by event)
+      name,
+      description: '',
+      metadata: {
+        email: email || '',
+        phone: phone || '',
+        canWorkAs: [], // Will be set when editing the staff member
+      },
+    });
+    
+    return {
+      id: response.data.id,
+      name: response.data.name,
+      phone: (response.data.metadata as any)?.phone,
+      email: (response.data.metadata as any)?.email,
+    };
+  };
+
   const handleSave = async () => {
     try {
+      // Get previous staff assignments from metadata
+      const previousPromotorId = eventMetadata.promotorStaffId;
+      const previousArtistLiaisonId = eventMetadata.artistLiaisonStaffId;
+      const previousTechnicalId = eventMetadata.technicalStaffId;
+
+      // Update event with staff references in metadata
+      const metadata = {
+        promotorStaffId: promotorStaff?.id || null,
+        artistLiaisonStaffId: artistLiaisonStaff?.id || null,
+        technicalStaffId: technicalStaff?.id || null,
+      };
+
       await eventsApi.update(event.id, {
         ...editData,
         startDate: editData.startDate ? new Date(editData.startDate) : undefined,
         endDate: editData.endDate ? new Date(editData.endDate) : undefined,
+        metadata: JSON.stringify(metadata),
       });
+
+      // Handle staff assignment sub-line items (create new, remove old)
+      const staffAssignments = [
+        { staff: promotorStaff, previousId: previousPromotorId, role: StaffRole.PROMOTOR, moduleType: ModuleTypeEnum.EVENT_DETAILS },
+        { staff: artistLiaisonStaff, previousId: previousArtistLiaisonId, role: StaffRole.ARTIST_LIAISON, moduleType: ModuleTypeEnum.EVENT_DETAILS },
+        { staff: technicalStaff, previousId: previousTechnicalId, role: StaffRole.TECHNICAL, moduleType: ModuleTypeEnum.EVENT_DETAILS },
+      ];
+
+      for (const assignment of staffAssignments) {
+        // Remove old assignment if staff was removed
+        if (assignment.previousId && !assignment.staff) {
+          try {
+            const staffLineItemResponse = await lineItemsApi.getById(assignment.previousId);
+            const staffLineItem = staffLineItemResponse.data;
+            const existingSubItems = (staffLineItem as any).subLineItems || [];
+
+            const assignmentToRemove = existingSubItems.find(
+              (subItem: any) => {
+                const subMetadata = typeof subItem.metadata === 'string' 
+                  ? JSON.parse(subItem.metadata) 
+                  : (subItem.metadata || {});
+                return subItem.eventId === event.id && 
+                       subMetadata.role === assignment.role &&
+                       subMetadata.moduleType === assignment.moduleType;
+              }
+            );
+
+            if (assignmentToRemove) {
+              await lineItemsApi.delete(assignmentToRemove.id);
+            }
+          } catch (error) {
+            console.error(`Failed to remove event assignment for ${assignment.role}:`, error);
+          }
+        }
+
+        // Create new assignment if staff was added
+        if (assignment.staff) {
+          try {
+            const staffLineItemResponse = await lineItemsApi.getById(assignment.staff.id);
+            const staffLineItem = staffLineItemResponse.data;
+            const existingSubItems = (staffLineItem as any).subLineItems || [];
+
+            const existingAssignment = existingSubItems.find(
+              (subItem: any) => {
+                const subMetadata = typeof subItem.metadata === 'string' 
+                  ? JSON.parse(subItem.metadata) 
+                  : (subItem.metadata || {});
+                return subItem.eventId === event.id && 
+                       subMetadata.role === assignment.role &&
+                       subMetadata.moduleType === assignment.moduleType;
+              }
+            );
+
+            if (!existingAssignment) {
+              const eventStartDate = event.startDate instanceof Date ? event.startDate.toISOString() : event.startDate;
+              const eventEndDate = event.endDate instanceof Date ? event.endDate.toISOString() : event.endDate;
+              
+              await lineItemsApi.create({
+                moduleType: ModuleTypeEnum.STAFF_POOL,
+                eventId: event.id,
+                parentLineItemId: assignment.staff.id,
+                name: `${event.name} - ${STAFF_ROLE_DISPLAY_NAMES[assignment.role]}`,
+                description: `Assigned as ${STAFF_ROLE_DISPLAY_NAMES[assignment.role]} for ${event.name}`,
+                metadata: {
+                  role: assignment.role,
+                  moduleType: assignment.moduleType,
+                  eventName: event.name,
+                  eventStartDate: eventStartDate,
+                  eventEndDate: eventEndDate,
+                },
+              });
+            }
+          } catch (error) {
+            console.error(`Failed to create event assignment for ${assignment.role}:`, error);
+          }
+        }
+      }
+
       onSave();
       onClose();
     } catch (error) {
@@ -245,60 +392,158 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
           {/* Contacts */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">Contacts</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
-                <label className="label">Promotor Name</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={editData.promotorName || ''}
-                  onChange={(e) => setEditData({ ...editData, promotorName: e.target.value })}
+                <StaffSelector
+                  label="Promotor"
+                  role={StaffRole.PROMOTOR}
+                  value={promotorStaff}
+                  onSelect={(staff) => {
+                    setPromotorStaff(staff);
+                    if (staff) {
+                      setEditData({
+                        ...editData,
+                        promotorName: staff.name,
+                        promotorPhone: staff.phone || '',
+                      });
+                    } else {
+                      setEditData({
+                        ...editData,
+                        promotorName: '',
+                        promotorPhone: '',
+                      });
+                    }
+                  }}
+                  onCreateNew={handleCreateStaff}
+                  placeholder="Select or create promotor"
                 />
+                {promotorStaff && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    You can manually edit name/phone below if needed
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div>
+                    <label className="label">Promotor Name</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={editData.promotorName || ''}
+                      onChange={(e) => setEditData({ ...editData, promotorName: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Promotor Phone</label>
+                    <input
+                      type="tel"
+                      className="input"
+                      value={editData.promotorPhone || ''}
+                      onChange={(e) => setEditData({ ...editData, promotorPhone: e.target.value })}
+                    />
+                  </div>
+                </div>
               </div>
+
               <div>
-                <label className="label">Promotor Phone</label>
-                <input
-                  type="tel"
-                  className="input"
-                  value={editData.promotorPhone || ''}
-                  onChange={(e) => setEditData({ ...editData, promotorPhone: e.target.value })}
+                <StaffSelector
+                  label="Artist Liaison"
+                  role={StaffRole.ARTIST_LIAISON}
+                  value={artistLiaisonStaff}
+                  onSelect={(staff) => {
+                    setArtistLiaisonStaff(staff);
+                    if (staff) {
+                      setEditData({
+                        ...editData,
+                        artistLiaisonName: staff.name,
+                        artistLiaisonPhone: staff.phone || '',
+                      });
+                    } else {
+                      setEditData({
+                        ...editData,
+                        artistLiaisonName: '',
+                        artistLiaisonPhone: '',
+                      });
+                    }
+                  }}
+                  onCreateNew={handleCreateStaff}
+                  placeholder="Select or create artist liaison"
                 />
+                {artistLiaisonStaff && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    You can manually edit name/phone below if needed
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div>
+                    <label className="label">Artist Liaison Name</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={editData.artistLiaisonName || ''}
+                      onChange={(e) => setEditData({ ...editData, artistLiaisonName: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Artist Liaison Phone</label>
+                    <input
+                      type="tel"
+                      className="input"
+                      value={editData.artistLiaisonPhone || ''}
+                      onChange={(e) => setEditData({ ...editData, artistLiaisonPhone: e.target.value })}
+                    />
+                  </div>
+                </div>
               </div>
+
               <div>
-                <label className="label">Artist Liaison Name</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={editData.artistLiaisonName || ''}
-                  onChange={(e) => setEditData({ ...editData, artistLiaisonName: e.target.value })}
+                <StaffSelector
+                  label="Technical Contact"
+                  role={StaffRole.TECHNICAL}
+                  value={technicalStaff}
+                  onSelect={(staff) => {
+                    setTechnicalStaff(staff);
+                    if (staff) {
+                      setEditData({
+                        ...editData,
+                        technicalName: staff.name,
+                        technicalPhone: staff.phone || '',
+                      });
+                    } else {
+                      setEditData({
+                        ...editData,
+                        technicalName: '',
+                        technicalPhone: '',
+                      });
+                    }
+                  }}
+                  onCreateNew={handleCreateStaff}
+                  placeholder="Select or create technical contact"
                 />
-              </div>
-              <div>
-                <label className="label">Artist Liaison Phone</label>
-                <input
-                  type="tel"
-                  className="input"
-                  value={editData.artistLiaisonPhone || ''}
-                  onChange={(e) => setEditData({ ...editData, artistLiaisonPhone: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Technical Name</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={editData.technicalName || ''}
-                  onChange={(e) => setEditData({ ...editData, technicalName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Technical Phone</label>
-                <input
-                  type="tel"
-                  className="input"
-                  value={editData.technicalPhone || ''}
-                  onChange={(e) => setEditData({ ...editData, technicalPhone: e.target.value })}
-                />
+                {technicalStaff && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    You can manually edit name/phone below if needed
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div>
+                    <label className="label">Technical Name</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={editData.technicalName || ''}
+                      onChange={(e) => setEditData({ ...editData, technicalName: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Technical Phone</label>
+                    <input
+                      type="tel"
+                      className="input"
+                      value={editData.technicalPhone || ''}
+                      onChange={(e) => setEditData({ ...editData, technicalPhone: e.target.value })}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

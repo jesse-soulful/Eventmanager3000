@@ -173,6 +173,17 @@ lineItemRoutes.post('/', async (req, res) => {
       metadata,
     } = req.body;
 
+    // Validate required fields
+    if (!moduleType) {
+      return res.status(400).json({ error: 'moduleType is required' });
+    }
+    if (!name) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+    if (!eventId) {
+      return res.status(400).json({ error: 'eventId is required' });
+    }
+
     const totalPrice = quantity && unitPrice ? quantity * unitPrice : (plannedCost || null);
 
     // If no statusId provided, try to find default status, but allow null

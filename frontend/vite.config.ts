@@ -7,10 +7,12 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@event-management/shared': path.resolve(__dirname, '../shared/dist'),
     },
   },
   optimizeDeps: {
     include: ['@event-management/shared'],
+    force: true, // Force re-optimization
   },
   server: {
     port: 5173,

@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Settings, Edit2 } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Settings, Edit2, Trash2 } from 'lucide-react';
 import { DollarSign, Calendar, MapPin, Building2, Users, Phone, User } from 'lucide-react';
 import { eventsApi } from '../lib/api';
 import type { Event, ModuleType } from '@event-management/shared';
 import { MODULE_DISPLAY_NAMES, MODULE_COLORS, EVENT_SCOPED_MODULES, ModuleType as ModuleTypeEnum } from '@event-management/shared';
 import { format } from 'date-fns';
 import { EventDetailsModal } from '../components/EventDetailsModal';
+import { EventStaffOverview } from '../components/EventStaffOverview';
 
 export function EventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -29,6 +31,22 @@ export function EventDetailPage() {
       console.error('Failed to load event:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!event || !eventId) return;
+    
+    if (!confirm(`Are you sure you want to delete "${event.name}"? This will permanently delete the event and all associated data (line items, staff assignments, etc.). This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await eventsApi.delete(eventId);
+      navigate('/events');
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+      alert('Failed to delete event. Please try again.');
     }
   };
 
@@ -80,6 +98,13 @@ export function EventDetailPage() {
               <DollarSign className="w-5 h-5" />
               Finance Board
             </Link>
+            <button
+              onClick={handleDeleteEvent}
+              className="btn btn-danger flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Event
+            </button>
           </div>
         </div>
 
@@ -172,6 +197,10 @@ export function EventDetailPage() {
           </Link>
         </div>
       </div>
+
+      {/* Modules Grid */}
+      {/* Staff Overview */}
+      {event && <EventStaffOverview event={event} />}
 
       {/* Modules Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

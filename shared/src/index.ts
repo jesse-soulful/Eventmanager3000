@@ -19,5 +19,7 @@ export * from './types/modules/marketing';
 
 // Utilities
 export * from './utils/constants';
+export * from './utils/staffRoles';
+export * from './utils/moduleStaffRoles';
 
 

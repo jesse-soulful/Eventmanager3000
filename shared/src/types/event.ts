@@ -16,6 +16,7 @@ export interface Event {
   technicalPhone?: string;
   runningOrder?: string;
   bannerImageUrl?: string;
+  metadata?: string | Record<string, any>;
   status: EventStatus;
   createdAt: Date;
   updatedAt: Date;

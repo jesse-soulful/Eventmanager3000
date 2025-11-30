@@ -33,7 +33,19 @@ eventRoutes.get('/', async (req, res) => {
     const events = await prisma.event.findMany({
       orderBy: { startDate: 'desc' },
     });
-    res.json(events);
+    // Parse metadata for all events
+    const parsedEvents = events.map(event => {
+      const parsed = { ...event };
+      if (parsed.metadata && typeof parsed.metadata === 'string') {
+        try {
+          parsed.metadata = JSON.parse(parsed.metadata);
+        } catch {
+          parsed.metadata = {};
+        }
+      }
+      return parsed;
+    });
+    res.json(parsedEvents);
   } catch (error: any) {
     console.error('Error fetching events:', error);
     res.status(500).json({ error: 'Failed to fetch events', details: error?.message });
@@ -85,6 +97,7 @@ eventRoutes.post('/', async (req, res) => {
       technicalPhone,
       runningOrder,
       bannerImageUrl,
+      metadata,
     } = req.body;
     console.log('Creating event with data:', { name, description, startDate, endDate, location });
     const event = await prisma.event.create({
@@ -105,6 +118,7 @@ eventRoutes.post('/', async (req, res) => {
         technicalPhone,
         runningOrder,
         bannerImageUrl,
+        metadata: metadata ? (typeof metadata === 'string' ? metadata : JSON.stringify(metadata)) : null,
         status: 'DRAFT',
       },
     });
@@ -139,6 +153,7 @@ eventRoutes.put('/:id', async (req, res) => {
       technicalPhone,
       runningOrder,
       bannerImageUrl,
+      metadata,
     } = req.body;
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
@@ -158,6 +173,9 @@ eventRoutes.put('/:id', async (req, res) => {
     if (technicalPhone !== undefined) updateData.technicalPhone = technicalPhone;
     if (runningOrder !== undefined) updateData.runningOrder = runningOrder;
     if (bannerImageUrl !== undefined) updateData.bannerImageUrl = bannerImageUrl;
+    if (metadata !== undefined) {
+      updateData.metadata = typeof metadata === 'string' ? metadata : JSON.stringify(metadata);
+    }
 
     const event = await prisma.event.update({
       where: { id: req.params.id },
@@ -284,27 +302,49 @@ eventRoutes.delete('/:id/banner', async (req, res) => {
 // Delete event
 eventRoutes.delete('/:id', async (req, res) => {
   try {
+    const eventId = req.params.id;
     const event = await prisma.event.findUnique({
-      where: { id: req.params.id },
+      where: { id: eventId },
+      include: {
+        LineItem: {
+          include: {
+            other_LineItem: true, // Include sub-line items
+          },
+        },
+      },
     });
 
-    if (event) {
-      // Delete banner if exists
-      if (event.bannerImageUrl) {
-        const filename = path.basename(event.bannerImageUrl);
-        const filePath = path.join(bannersDir, filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Delete banner if exists
+    if (event.bannerImageUrl) {
+      const filename = path.basename(event.bannerImageUrl);
+      const filePath = path.join(bannersDir, filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
       }
     }
 
+    // Prisma will automatically cascade delete:
+    // - LineItems (including sub-line items via onDelete: Cascade)
+    // - Categories (via onDelete: Cascade)
+    // - Statuses (via onDelete: Cascade)
+    // - Tags (via onDelete: Cascade)
+    // - SubLineItemTypes (via onDelete: Cascade)
+    // - Comments (via LineItem cascade)
     await prisma.event.delete({
-      where: { id: req.params.id },
+      where: { id: eventId },
     });
+    
     res.status(204).send();
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete event' });
+  } catch (error: any) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete event',
+      details: error?.message 
+    });
   }
 });
 

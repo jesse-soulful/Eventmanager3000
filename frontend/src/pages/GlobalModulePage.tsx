@@ -25,9 +25,13 @@ export function GlobalModulePage() {
   const moduleTypeEnum = moduleType?.toUpperCase().replace(/-/g, '_') as ModuleType;
 
   useEffect(() => {
+    console.log('GlobalModulePage: moduleType from URL:', moduleType, '-> parsed:', moduleTypeEnum);
     if (moduleTypeEnum) {
       loadEvents();
       loadData();
+    } else {
+      console.warn('GlobalModulePage: Invalid or missing moduleType:', moduleType);
+      setLoading(false);
     }
   }, [moduleTypeEnum, selectedEventId]);
 
@@ -37,11 +41,16 @@ export function GlobalModulePage() {
       setEvents(response.data);
     } catch (error) {
       console.error('Failed to load events:', error);
+      setEvents([]); // Set empty array on error
     }
   };
 
   const loadData = async () => {
-    if (!moduleTypeEnum) return;
+    if (!moduleTypeEnum) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     try {
       const [itemsRes, statusesRes, categoriesRes, tagsRes] = await Promise.all([
         modulesApi.getGlobalModuleLineItems(moduleTypeEnum, selectedEventId || undefined),
@@ -49,12 +58,22 @@ export function GlobalModulePage() {
         categoriesApi.getByModule(moduleTypeEnum),
         tagsApi.getByModule(moduleTypeEnum),
       ]);
-      setLineItems(itemsRes.data);
-      setStatuses(statusesRes.data);
-      setCategories(categoriesRes.data);
-      setTags(tagsRes.data);
-    } catch (error) {
+      setLineItems(itemsRes.data || []);
+      setStatuses(statusesRes.data || []);
+      setCategories(categoriesRes.data || []);
+      setTags(tagsRes.data || []);
+    } catch (error: any) {
       console.error('Failed to load data:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status,
+      });
+      // Set empty arrays on error to prevent infinite loading
+      setLineItems([]);
+      setStatuses([]);
+      setCategories([]);
+      setTags([]);
     } finally {
       setLoading(false);
     }

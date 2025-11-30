@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Plus, ArrowLeft, Tag as TagIcon } from 'lucide-react';
-import { modulesApi, lineItemsApi, statusesApi, categoriesApi, tagsApi } from '../lib/api';
-import type { LineItem, Status, Category, Tag, ModuleType } from '@event-management/shared';
-import { MODULE_DISPLAY_NAMES } from '@event-management/shared';
+import { modulesApi, lineItemsApi, statusesApi, categoriesApi, tagsApi, eventsApi } from '../lib/api';
+import type { LineItem, Status, Category, Tag, ModuleType, Event } from '@event-management/shared';
+import { MODULE_DISPLAY_NAMES, moduleSupportsStaffAssignments } from '@event-management/shared';
 import { LineItemModal } from '../components/LineItemModal';
 import { StatusDropdown } from '../components/StatusDropdown';
 import { InlineAmountInput } from '../components/InlineAmountInput';
+import { ModuleStaffAssignments } from '../components/ModuleStaffAssignments';
 import { formatCurrency } from '../lib/utils';
 
 export function ModulePage() {
@@ -15,6 +16,7 @@ export function ModulePage() {
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingItem, setEditingItem] = useState<LineItem | null>(null);
@@ -30,16 +32,18 @@ export function ModulePage() {
   const loadData = async () => {
     if (!eventId || !moduleTypeEnum) return;
     try {
-      const [itemsRes, statusesRes, categoriesRes, tagsRes] = await Promise.all([
+      const [itemsRes, statusesRes, categoriesRes, tagsRes, eventRes] = await Promise.all([
         modulesApi.getLineItems(eventId, moduleTypeEnum),
         statusesApi.getByModule(moduleTypeEnum, 'main'), // Only main statuses for module page (no sub-items here)
         categoriesApi.getByModule(moduleTypeEnum),
         tagsApi.getByModule(moduleTypeEnum),
+        eventsApi.getById(eventId),
       ]);
       setLineItems(itemsRes.data);
       setStatuses(statusesRes.data);
       setCategories(categoriesRes.data);
       setTags(tagsRes.data);
+      setEvent(eventRes.data);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -118,6 +122,15 @@ export function ModulePage() {
           </button>
         </div>
       </div>
+
+      {/* Staff Assignments */}
+      {event && moduleSupportsStaffAssignments(moduleTypeEnum) && (
+        <ModuleStaffAssignments
+          event={event}
+          moduleType={moduleTypeEnum}
+          onUpdate={loadData}
+        />
+      )}
 
       {/* Line Items Table */}
       {lineItems.length === 0 ? (

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { formatCurrency, formatNumber } from '../lib/utils';
 import { lineItemsApi } from '../lib/api';
 import type { LineItem, Status, Category, Tag, ModuleType } from '@event-management/shared';
+import { ModuleType as ModuleTypeEnum } from '@event-management/shared';
 import { AlertTriangle } from 'lucide-react';
 
 interface SubLineItemModalProps {
@@ -95,8 +96,8 @@ export function SubLineItemModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if planned cost exceeds parent's total planned cost
-    if (parentItem && formData.plannedCost && !pendingSubmit) {
+    // Check if planned cost exceeds parent's total planned cost (only for non-staff-pool modules)
+    if (parentItem && formData.plannedCost && !pendingSubmit && moduleType !== ModuleTypeEnum.STAFF_POOL) {
       const totalPlanned = await calculateTotalPlannedCost();
       const parentPlannedCost = parentItem.plannedCost || 0;
       
@@ -116,9 +117,9 @@ export function SubLineItemModal({
         description: formData.description || undefined,
         plannedCost: formData.plannedCost ? parseFloat(formData.plannedCost) : undefined,
         actualCost: formData.actualCost ? parseFloat(formData.actualCost) : undefined,
-        statusId: formData.statusId || undefined,
-        categoryId: formData.categoryId || undefined,
-        tagIds: formData.tagIds,
+        statusId: moduleType !== ModuleTypeEnum.STAFF_POOL ? (formData.statusId || undefined) : undefined,
+        categoryId: moduleType !== ModuleTypeEnum.STAFF_POOL ? (formData.categoryId || undefined) : undefined,
+        tagIds: moduleType !== ModuleTypeEnum.STAFF_POOL ? formData.tagIds : [],
         metadata: formData.metadata,
       };
 
@@ -159,11 +160,13 @@ export function SubLineItemModal({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl animate-in zoom-in-95 duration-200">
         <h2 className="text-3xl font-bold gradient-text mb-6">
-          {lineItem ? 'Edit Sub-line Item' : 'Create Sub-line Item'}
+          {moduleType === ModuleTypeEnum.STAFF_POOL
+            ? (lineItem ? 'Edit Event Assignment' : 'Add Event Assignment')
+            : (lineItem ? 'Edit Sub-line Item' : 'Create Sub-line Item')}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Warning Banner */}
-          {showWarning && parentItem && (
+          {/* Warning Banner - Only show for non-staff-pool modules */}
+          {showWarning && parentItem && moduleType !== ModuleTypeEnum.STAFF_POOL && (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
               <div className="flex items-start">
                 <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3" />
@@ -200,8 +203,8 @@ export function SubLineItemModal({
             </div>
           )}
 
-          {/* Cost Summary */}
-          {parentItem && (
+          {/* Cost Summary - Only show for non-staff-pool modules */}
+          {parentItem && moduleType !== ModuleTypeEnum.STAFF_POOL && (
             <div className="bg-gray-50 p-3 rounded-lg text-sm">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-gray-600">Parent Total Planned Cost:</span>
@@ -235,12 +238,13 @@ export function SubLineItemModal({
             />
           </div>
           <div>
-            <label className="label">Description</label>
+            <label className="label">{moduleType === ModuleTypeEnum.STAFF_POOL ? 'Notes' : 'Description'}</label>
             <textarea
               className="input"
               rows={3}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder={moduleType === ModuleTypeEnum.STAFF_POOL ? 'Add notes about this event assignment...' : ''}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -263,7 +267,7 @@ export function SubLineItemModal({
                 }}
                 placeholder="0.00"
               />
-              {parentItem && (
+              {parentItem && moduleType !== ModuleTypeEnum.STAFF_POOL && (
                 <p className="text-xs mt-1 text-gray-500">
                   Will be added to parent total
                 </p>
@@ -279,60 +283,67 @@ export function SubLineItemModal({
                 onChange={(e) => setFormData({ ...formData, actualCost: e.target.value })}
                 placeholder="0.00"
               />
-              <p className="text-xs mt-1 text-gray-500">
-                Will be added to parent actual cost
-              </p>
+              {moduleType !== ModuleTypeEnum.STAFF_POOL && (
+                <p className="text-xs mt-1 text-gray-500">
+                  Will be added to parent actual cost
+                </p>
+              )}
             </div>
           </div>
-          <div>
-            <label className="label">Status</label>
-            <select
-              className="input"
-              value={formData.statusId}
-              onChange={(e) => setFormData({ ...formData, statusId: e.target.value })}
-            >
-              <option value="">None</option>
-              {statuses.map((status) => (
-                <option key={status.id} value={status.id}>
-                  {status.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="label">Category</label>
-            <select
-              className="input"
-              value={formData.categoryId}
-              onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-            >
-              <option value="">None</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="label">Tags</label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {tags.map((tag) => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => toggleTag(tag.id)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                    formData.tagIds.includes(tag.id)
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
+          {/* Hide Status, Category, and Tags for Staff Pool sub-items */}
+          {moduleType !== ModuleTypeEnum.STAFF_POOL && (
+            <>
+              <div>
+                <label className="label">Status</label>
+                <select
+                  className="input"
+                  value={formData.statusId}
+                  onChange={(e) => setFormData({ ...formData, statusId: e.target.value })}
                 >
-                  {tag.name}
-                </button>
-              ))}
-            </div>
-          </div>
+                  <option value="">None</option>
+                  {statuses.map((status) => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label">Category</label>
+                <select
+                  className="input"
+                  value={formData.categoryId}
+                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                >
+                  <option value="">None</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label">Tags</label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {tags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                        formData.tagIds.includes(tag.id)
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
           <div className="flex gap-3 justify-end pt-4">
             <button type="button" onClick={onClose} className="btn btn-secondary">
               Cancel

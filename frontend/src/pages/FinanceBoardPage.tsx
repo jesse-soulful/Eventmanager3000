@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, TrendingDown, DollarSign, Filter, ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
 import { financeApi, eventsApi } from '../lib/api';
@@ -58,21 +58,7 @@ export function FinanceBoardPage() {
     eventsApi.getAll().then(res => setEvents(res.data)).catch(console.error);
   }, []);
 
-  // Load finance data
-  useEffect(() => {
-    loadData();
-  }, [eventId, selectedEventIds, startDate, endDate, selectedModules, includeSubItems]);
-
-  // Auto-refresh on window focus
-  useEffect(() => {
-    const handleFocus = () => {
-      loadData();
-    };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const filters: FinanceFilters = {
@@ -85,12 +71,12 @@ export function FinanceBoardPage() {
 
       if (eventId) {
         // Event-scoped view (backward compatibility)
-      const [summaryRes, itemsRes] = await Promise.all([
-        financeApi.getSummary(eventId),
-        financeApi.getLineItems(eventId),
-      ]);
-      setSummary(summaryRes.data);
-      setLineItems(itemsRes.data);
+        const [summaryRes, itemsRes] = await Promise.all([
+          financeApi.getSummary(eventId),
+          financeApi.getLineItems(eventId),
+        ]);
+        setSummary(summaryRes.data);
+        setLineItems(itemsRes.data);
       } else {
         // Cross-event view
         const [summaryRes, itemsRes] = await Promise.all([
@@ -105,7 +91,21 @@ export function FinanceBoardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId, selectedEventIds, startDate, endDate, selectedModules, includeSubItems]);
+
+  // Load finance data
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Auto-refresh on window focus
+  useEffect(() => {
+    const handleFocus = () => {
+      loadData();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [loadData]);
 
   // Update URL params when filters change
   useEffect(() => {
