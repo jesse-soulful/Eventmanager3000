@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Upload, Trash2, Image as ImageIcon } from 'lucide-react';
-import { eventsApi, lineItemsApi } from '../lib/api';
+import { eventsApi, lineItemsApi, modulesApi } from '../lib/api';
 import type { Event } from '@event-management/shared';
 import { ModuleType as ModuleTypeEnum, StaffRole, STAFF_ROLE_DISPLAY_NAMES } from '@event-management/shared';
 import { StaffSelector } from './StaffSelector';
+import { VenueSelector } from './VenueSelector';
 import { format } from 'date-fns';
 
 interface EventDetailsModalProps {
@@ -41,9 +42,9 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
       ? { id: eventMetadata.artistLiaisonStaffId, name: event.artistLiaisonName, phone: event.artistLiaisonPhone }
       : null
   );
-  const [technicalStaff, setTechnicalStaff] = useState<{ id: string; name: string; phone?: string; email?: string } | null>(
-    eventMetadata.technicalStaffId && event.technicalName
-      ? { id: eventMetadata.technicalStaffId, name: event.technicalName, phone: event.technicalPhone }
+  const [venue, setVenue] = useState<{ id: string; name: string; address?: string; capacity?: number } | null>(
+    eventMetadata.venueVendorId && event.venueName
+      ? { id: eventMetadata.venueVendorId, name: event.venueName, address: event.venueAddress, capacity: event.venueCapacity }
       : null
   );
 
@@ -53,17 +54,15 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
 
   const handleCreateStaff = async (name: string, phone?: string, email?: string): Promise<{ id: string; name: string; phone?: string; email?: string }> => {
     // Create staff member in staff pool
-    // Note: For global modules, we still need to provide an eventId (can use current event)
-    // The staff member will be available across all events via the global module API
     const response = await lineItemsApi.create({
       moduleType: ModuleTypeEnum.STAFF_POOL,
-      eventId: event.id, // Use current event ID (staff pool items can be filtered by event)
+      eventId: event.id,
       name,
       description: '',
       metadata: {
         email: email || '',
         phone: phone || '',
-        canWorkAs: [], // Will be set when editing the staff member
+        canWorkAs: [],
       },
     });
     
@@ -75,24 +74,58 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
     };
   };
 
+  const handleCreateVenue = async (name: string, address?: string, capacity?: number): Promise<{ id: string; name: string; address?: string; capacity?: number }> => {
+    // Create venue in vendors/suppliers module
+    const response = await lineItemsApi.create({
+      moduleType: ModuleTypeEnum.VENDORS_SUPPLIERS,
+      eventId: event.id,
+      name,
+      description: address || '',
+      metadata: {
+        address: address || '',
+        capacity: capacity || null,
+      },
+    });
+    
+    return {
+      id: response.data.id,
+      name: response.data.name,
+      address: (response.data.metadata as any)?.address,
+      capacity: (response.data.metadata as any)?.capacity,
+    };
+  };
+
   const handleSave = async () => {
     try {
       // Get previous staff assignments from metadata
       const previousPromotorId = eventMetadata.promotorStaffId;
       const previousArtistLiaisonId = eventMetadata.artistLiaisonStaffId;
-      const previousTechnicalId = eventMetadata.technicalStaffId;
+      const previousVenueId = eventMetadata.venueVendorId;
 
-      // Update event with staff references in metadata
+      // Prepare updated venue details from selected venue
+      const updatedVenueData = venue ? {
+        venueName: venue.name,
+        venueAddress: venue.address || '',
+        venueCapacity: venue.capacity || undefined,
+      } : {
+        venueName: editData.venueName || '',
+        venueAddress: editData.venueAddress || '',
+        venueCapacity: editData.venueCapacity || undefined,
+      };
+
+      // Update event with staff and venue references in metadata
       const metadata = {
         promotorStaffId: promotorStaff?.id || null,
         artistLiaisonStaffId: artistLiaisonStaff?.id || null,
-        technicalStaffId: technicalStaff?.id || null,
+        venueVendorId: venue?.id || null,
       };
 
       await eventsApi.update(event.id, {
         ...editData,
+        ...updatedVenueData,
         startDate: editData.startDate ? new Date(editData.startDate) : undefined,
         endDate: editData.endDate ? new Date(editData.endDate) : undefined,
+        venueCapacity: updatedVenueData.venueCapacity !== undefined ? (updatedVenueData.venueCapacity === null ? null : Number(updatedVenueData.venueCapacity)) : undefined,
         metadata: JSON.stringify(metadata),
       });
 
@@ -100,7 +133,6 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
       const staffAssignments = [
         { staff: promotorStaff, previousId: previousPromotorId, role: StaffRole.PROMOTOR, moduleType: ModuleTypeEnum.EVENT_DETAILS },
         { staff: artistLiaisonStaff, previousId: previousArtistLiaisonId, role: StaffRole.ARTIST_LIAISON, moduleType: ModuleTypeEnum.EVENT_DETAILS },
-        { staff: technicalStaff, previousId: previousTechnicalId, role: StaffRole.TECHNICAL, moduleType: ModuleTypeEnum.EVENT_DETAILS },
       ];
 
       for (const assignment of staffAssignments) {
@@ -307,12 +339,12 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
             )}
           </div>
 
-          {/* Basic Information */}
+          {/* Event */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">Basic Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">Event</h3>
             <div className="space-y-4">
               <div>
-                <label className="label">Event Title *</label>
+                <label className="label">Event Name *</label>
                 <input
                   type="text"
                   required
@@ -321,18 +353,9 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
                   onChange={(e) => setEditData({ ...editData, name: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="label">Description</label>
-                <textarea
-                  className="input"
-                  rows={3}
-                  value={editData.description || ''}
-                  onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                />
-              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Start Date *</label>
+                  <label className="label">Event Date (Start) *</label>
                   <input
                     type="date"
                     required
@@ -342,7 +365,7 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
                   />
                 </div>
                 <div>
-                  <label className="label">End Date *</label>
+                  <label className="label">Event Date (End) *</label>
                   <input
                     type="date"
                     required
@@ -352,6 +375,26 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
                   />
                 </div>
               </div>
+              <div>
+                <label className="label">Event Link</label>
+                <input
+                  type="url"
+                  className="input"
+                  placeholder="https://..."
+                  value={editData.eventLink || ''}
+                  onChange={(e) => setEditData({ ...editData, eventLink: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="label">Ticketshop Link</label>
+                <input
+                  type="url"
+                  className="input"
+                  placeholder="https://..."
+                  value={editData.ticketshopLink || ''}
+                  onChange={(e) => setEditData({ ...editData, ticketshopLink: e.target.value })}
+                />
+              </div>
             </div>
           </div>
 
@@ -359,32 +402,63 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
           <div>
             <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">Venue Details</h3>
             <div className="space-y-4">
-              <div>
-                <label className="label">Venue Name</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={editData.venueName || ''}
-                  onChange={(e) => setEditData({ ...editData, venueName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Venue Address</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={editData.venueAddress || ''}
-                  onChange={(e) => setEditData({ ...editData, venueAddress: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Venue Capacity</label>
-                <input
-                  type="number"
-                  className="input"
-                  value={editData.venueCapacity || ''}
-                  onChange={(e) => setEditData({ ...editData, venueCapacity: e.target.value ? parseInt(e.target.value) : undefined })}
-                />
+              <VenueSelector
+                label="Venue (from Vendors/Suppliers)"
+                value={venue}
+                onSelect={(selectedVenue) => {
+                  setVenue(selectedVenue);
+                  if (selectedVenue) {
+                    setEditData({
+                      ...editData,
+                      venueName: selectedVenue.name,
+                      venueAddress: selectedVenue.address || '',
+                      venueCapacity: selectedVenue.capacity || undefined,
+                    });
+                  } else {
+                    setEditData({
+                      ...editData,
+                      venueName: '',
+                      venueAddress: '',
+                      venueCapacity: undefined,
+                    });
+                  }
+                }}
+                onCreateNew={handleCreateVenue}
+                placeholder="Select or create venue"
+              />
+              {venue && (
+                <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                  Venue details are populated from the selected vendor. You can manually edit below if needed.
+                </div>
+              )}
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="label">Venue Name</label>
+                  <input
+                    type="text"
+                    className="input"
+                    value={editData.venueName || ''}
+                    onChange={(e) => setEditData({ ...editData, venueName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="label">Venue Address</label>
+                  <input
+                    type="text"
+                    className="input"
+                    value={editData.venueAddress || ''}
+                    onChange={(e) => setEditData({ ...editData, venueAddress: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="label">Venue Capacity</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={editData.venueCapacity || ''}
+                    onChange={(e) => setEditData({ ...editData, venueCapacity: e.target.value ? parseInt(e.target.value) : undefined })}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -495,56 +569,6 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
                 </div>
               </div>
 
-              <div>
-                <StaffSelector
-                  label="Technical Contact"
-                  role={StaffRole.TECHNICAL}
-                  value={technicalStaff}
-                  onSelect={(staff) => {
-                    setTechnicalStaff(staff);
-                    if (staff) {
-                      setEditData({
-                        ...editData,
-                        technicalName: staff.name,
-                        technicalPhone: staff.phone || '',
-                      });
-                    } else {
-                      setEditData({
-                        ...editData,
-                        technicalName: '',
-                        technicalPhone: '',
-                      });
-                    }
-                  }}
-                  onCreateNew={handleCreateStaff}
-                  placeholder="Select or create technical contact"
-                />
-                {technicalStaff && (
-                  <div className="mt-2 text-sm text-gray-600">
-                    You can manually edit name/phone below if needed
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  <div>
-                    <label className="label">Technical Name</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={editData.technicalName || ''}
-                      onChange={(e) => setEditData({ ...editData, technicalName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Technical Phone</label>
-                    <input
-                      type="tel"
-                      className="input"
-                      value={editData.technicalPhone || ''}
-                      onChange={(e) => setEditData({ ...editData, technicalPhone: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 

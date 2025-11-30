@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Settings, Edit2, Trash2 } from 'lucide-react';
-import { DollarSign, Calendar, MapPin, Building2, Users, Phone, User } from 'lucide-react';
+import { Edit2, Trash2, Link as LinkIcon } from 'lucide-react';
+import { Calendar, MapPin, Building2, Users, User } from 'lucide-react';
 import { eventsApi } from '../lib/api';
 import type { Event, ModuleType } from '@event-management/shared';
 import { MODULE_DISPLAY_NAMES, MODULE_COLORS, EVENT_SCOPED_MODULES, ModuleType as ModuleTypeEnum } from '@event-management/shared';
@@ -91,13 +91,6 @@ export function EventDetailPage() {
               <Edit2 className="w-4 h-4" />
               Edit Details
             </button>
-            <Link
-              to={`/events/${eventId}/finance`}
-              className="btn btn-primary flex items-center gap-2"
-            >
-              <DollarSign className="w-5 h-5" />
-              Finance Board
-            </Link>
             <button
               onClick={handleDeleteEvent}
               className="btn btn-danger flex items-center gap-2"
@@ -110,15 +103,8 @@ export function EventDetailPage() {
 
         {/* Event Details Summary */}
         <div className="card mb-6">
-          <div className="flex justify-between items-start mb-4">
+          <div className="mb-4">
             <h2 className="text-xl font-bold text-gray-900">Event Details</h2>
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="btn btn-secondary flex items-center gap-2 text-sm"
-            >
-              <Edit2 className="w-4 h-4" />
-              Edit
-            </button>
           </div>
           
           {/* Banner Preview */}
@@ -132,73 +118,93 @@ export function EventDetailPage() {
             </div>
           )}
 
-          {/* Compact Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-2 text-gray-600">
-              <Calendar className="w-4 h-4" />
-              <span>{format(new Date(event.startDate), 'MMM d, yyyy')} - {format(new Date(event.endDate), 'MMM d, yyyy')}</span>
+          {/* Event Section */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Event</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-2 text-gray-600">
+                <Calendar className="w-4 h-4" />
+                <span>{format(new Date(event.startDate), 'MMM d, yyyy')} - {format(new Date(event.endDate), 'MMM d, yyyy')}</span>
+              </div>
+              {event.eventLink && (
+                <div className="flex items-center gap-2 text-gray-600">
+                  <LinkIcon className="w-4 h-4" />
+                  <a href={event.eventLink} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
+                    Event Link
+                  </a>
+                </div>
+              )}
+              {event.ticketshopLink && (
+                <div className="flex items-center gap-2 text-gray-600">
+                  <LinkIcon className="w-4 h-4" />
+                  <a href={event.ticketshopLink} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
+                    Ticketshop Link
+                  </a>
+                </div>
+              )}
             </div>
-            {event.venueName && (
-              <div className="flex items-center gap-2 text-gray-600">
-                <Building2 className="w-4 h-4" />
-                <span>{event.venueName}</span>
-              </div>
-            )}
-            {event.venueAddress && (
-              <div className="flex items-center gap-2 text-gray-600">
-                <MapPin className="w-4 h-4" />
-                <span>{event.venueAddress}</span>
-              </div>
-            )}
-            {event.venueCapacity && (
-              <div className="flex items-center gap-2 text-gray-600">
-                <Users className="w-4 h-4" />
-                <span>Capacity: {event.venueCapacity.toLocaleString()}</span>
-              </div>
-            )}
-            {event.promotorName && (
-              <div className="flex items-center gap-2 text-gray-600">
-                <User className="w-4 h-4" />
-                <span>Promotor: {event.promotorName}</span>
-                {event.promotorPhone && <span className="text-gray-400">• {event.promotorPhone}</span>}
-              </div>
-            )}
-            {event.artistLiaisonName && (
-              <div className="flex items-center gap-2 text-gray-600">
-                <User className="w-4 h-4" />
-                <span>Artist Liaison: {event.artistLiaisonName}</span>
-                {event.artistLiaisonPhone && <span className="text-gray-400">• {event.artistLiaisonPhone}</span>}
-              </div>
-            )}
-            {event.technicalName && (
-              <div className="flex items-center gap-2 text-gray-600">
-                <User className="w-4 h-4" />
-                <span>Technical: {event.technicalName}</span>
-                {event.technicalPhone && <span className="text-gray-400">• {event.technicalPhone}</span>}
-              </div>
-            )}
           </div>
+
+          {/* Venue Details Section */}
+          {(event.venueName || event.venueAddress || event.venueCapacity) && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Venue Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {event.venueName && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Building2 className="w-4 h-4" />
+                    <span>{event.venueName}</span>
+                  </div>
+                )}
+                {event.venueAddress && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <MapPin className="w-4 h-4" />
+                    <span>{event.venueAddress}</span>
+                  </div>
+                )}
+                {event.venueCapacity && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Users className="w-4 h-4" />
+                    <span>Capacity: {event.venueCapacity.toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Contacts Section */}
+          {(event.promotorName || event.artistLiaisonName) && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Contacts</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {event.promotorName && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <User className="w-4 h-4" />
+                    <span>Promotor: {event.promotorName}</span>
+                    {event.promotorPhone && <span className="text-gray-400">• {event.promotorPhone}</span>}
+                  </div>
+                )}
+                {event.artistLiaisonName && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <User className="w-4 h-4" />
+                    <span>Artist Liaison: {event.artistLiaisonName}</span>
+                    {event.artistLiaisonPhone && <span className="text-gray-400">• {event.artistLiaisonPhone}</span>}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Running Order Section */}
+          {event.runningOrder && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Running Order</h3>
+              <div className="text-sm text-gray-600 whitespace-pre-wrap">{event.runningOrder}</div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Management Link */}
-      <div className="mb-6 card p-4 bg-gradient-to-r from-primary-50 to-purple-50 border border-primary-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">Metadata Management</h3>
-            <p className="text-sm text-gray-600">Manage statuses, categories, and tags for all modules</p>
-          </div>
-          <Link
-            to="/manage-metadata"
-            className="btn btn-primary flex items-center gap-2"
-          >
-            <Settings className="w-5 h-5" />
-            <span>Manage Metadata</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Modules Grid */}
       {/* Staff Overview */}
       {event && <EventStaffOverview event={event} />}
 

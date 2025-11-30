@@ -117,7 +117,7 @@ export function EventsPage() {
               </Link>
               <button
                 onClick={(e) => handleDeleteEvent(event.id, event.name, e)}
-                className="absolute top-4 right-4 p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-4 right-4 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg opacity-60 hover:opacity-100 transition-all"
                 title="Delete event"
               >
                 <Trash2 className="w-4 h-4" />

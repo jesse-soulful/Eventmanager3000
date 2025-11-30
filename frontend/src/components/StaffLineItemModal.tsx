@@ -77,9 +77,21 @@ export function StaffLineItemModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Validate eventId for creation (required by backend)
+      // For creating new staff members, eventId is required (cannot be empty string or undefined)
+      // For updates, use existing eventId if no new one provided
+      const finalEventId = lineItem 
+        ? (eventId && eventId.trim() ? eventId : lineItem.eventId)
+        : (eventId && eventId.trim() ? eventId : undefined);
+
+      if (!lineItem && !finalEventId) {
+        alert('Please select an event or create an event first before adding staff members.');
+        return;
+      }
+
       const data = {
         moduleType,
-        eventId: eventId || undefined, // For global modules, eventId can be null
+        eventId: finalEventId!,
         name: formData.name,
         description: formData.description || undefined,
         plannedCost: formData.plannedCost ? parseFloat(formData.plannedCost) : undefined,

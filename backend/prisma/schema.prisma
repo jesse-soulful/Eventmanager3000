@@ -31,6 +31,8 @@ model Event {
   startDate           DateTime
   endDate             DateTime
   location            String?
+  eventLink           String?
+  ticketshopLink      String?
   venueName           String?
   venueAddress        String?
   venueCapacity       Int?

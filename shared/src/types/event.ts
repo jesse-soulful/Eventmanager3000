@@ -5,6 +5,8 @@ export interface Event {
   startDate: Date;
   endDate: Date;
   location?: string;
+  eventLink?: string;
+  ticketshopLink?: string;
   venueName?: string;
   venueAddress?: string;
   venueCapacity?: number;
@@ -37,6 +39,8 @@ export interface CreateEventInput {
   startDate: Date;
   endDate: Date;
   location?: string;
+  eventLink?: string;
+  ticketshopLink?: string;
   venueName?: string;
   venueAddress?: string;
   venueCapacity?: number;
@@ -56,6 +60,8 @@ export interface UpdateEventInput {
   startDate?: Date;
   endDate?: Date;
   location?: string;
+  eventLink?: string;
+  ticketshopLink?: string;
   venueName?: string;
   venueAddress?: string;
   venueCapacity?: number;

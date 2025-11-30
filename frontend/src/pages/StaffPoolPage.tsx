@@ -375,7 +375,7 @@ export function StaffPoolPage() {
       {(showCreateModal || editingItem) && (
         <StaffLineItemModal
           moduleType={ModuleTypeEnum.STAFF_POOL}
-          eventId={editingItem?.eventId || selectedEventId || events[0]?.id || ''}
+          eventId={editingItem?.eventId || selectedEventId || events[0]?.id || undefined}
           lineItem={editingItem}
           statuses={statuses}
           categories={categories}

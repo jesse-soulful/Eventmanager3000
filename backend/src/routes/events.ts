@@ -86,6 +86,8 @@ eventRoutes.post('/', async (req, res) => {
       startDate, 
       endDate, 
       location,
+      eventLink,
+      ticketshopLink,
       venueName,
       venueAddress,
       venueCapacity,
@@ -107,6 +109,8 @@ eventRoutes.post('/', async (req, res) => {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         location,
+        eventLink,
+        ticketshopLink,
         venueName,
         venueAddress,
         venueCapacity: venueCapacity ? parseInt(venueCapacity) : null,
@@ -142,6 +146,8 @@ eventRoutes.put('/:id', async (req, res) => {
       endDate, 
       location, 
       status,
+      eventLink,
+      ticketshopLink,
       venueName,
       venueAddress,
       venueCapacity,
@@ -162,6 +168,8 @@ eventRoutes.put('/:id', async (req, res) => {
     if (endDate !== undefined) updateData.endDate = new Date(endDate);
     if (location !== undefined) updateData.location = location;
     if (status !== undefined) updateData.status = status;
+    if (eventLink !== undefined) updateData.eventLink = eventLink;
+    if (ticketshopLink !== undefined) updateData.ticketshopLink = ticketshopLink;
     if (venueName !== undefined) updateData.venueName = venueName;
     if (venueAddress !== undefined) updateData.venueAddress = venueAddress;
     if (venueCapacity !== undefined) updateData.venueCapacity = venueCapacity ? parseInt(venueCapacity) : null;
