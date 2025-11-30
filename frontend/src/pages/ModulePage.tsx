@@ -5,6 +5,8 @@ import { modulesApi, lineItemsApi, statusesApi, categoriesApi, tagsApi } from '.
 import type { LineItem, Status, Category, Tag, ModuleType } from '@event-management/shared';
 import { MODULE_DISPLAY_NAMES } from '@event-management/shared';
 import { LineItemModal } from '../components/LineItemModal';
+import { StatusDropdown } from '../components/StatusDropdown';
+import { InlineAmountInput } from '../components/InlineAmountInput';
 
 export function ModulePage() {
   const { eventId, moduleType } = useParams<{ eventId: string; moduleType: string }>();
@@ -54,14 +56,39 @@ export function ModulePage() {
     }
   };
 
+  const handleStatusChange = async (itemId: string, statusId: string | null) => {
+    try {
+      await lineItemsApi.update(itemId, { statusId: statusId || undefined });
+      loadData();
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      throw error;
+    }
+  };
+
+  const handlePlannedCostChange = async (itemId: string, plannedCost: number | null) => {
+    try {
+      await lineItemsApi.update(itemId, { plannedCost: plannedCost || undefined });
+      loadData();
+    } catch (error) {
+      console.error('Failed to update planned cost:', error);
+      throw error;
+    }
+  };
+
+  const handleActualCostChange = async (itemId: string, actualCost: number | null) => {
+    try {
+      await lineItemsApi.update(itemId, { actualCost: actualCost || undefined });
+      loadData();
+    } catch (error) {
+      console.error('Failed to update actual cost:', error);
+      throw error;
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-12">Loading...</div>;
   }
-
-  const getStatusColor = (statusId: string) => {
-    const status = statuses.find(s => s.id === statusId);
-    return status?.color || '#6B7280';
-  };
 
   return (
     <div>
@@ -122,6 +149,12 @@ export function ModulePage() {
                     Tags
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Planned Cost
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actual Cost
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Quantity
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -145,12 +178,12 @@ export function ModulePage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className="px-2 py-1 text-xs font-medium rounded-full text-white"
-                        style={{ backgroundColor: getStatusColor(item.status.id) }}
-                      >
-                        {item.status.name}
-                      </span>
+                      <StatusDropdown
+                        statuses={statuses}
+                        currentStatus={item.status || null}
+                        onStatusChange={(statusId) => handleStatusChange(item.id, statusId)}
+                        size="sm"
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {item.category?.name || '-'}
@@ -167,6 +200,20 @@ export function ModulePage() {
                           </span>
                         ))}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <InlineAmountInput
+                        value={item.plannedCost}
+                        onSave={(value) => handlePlannedCostChange(item.id, value)}
+                        color="blue"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <InlineAmountInput
+                        value={item.actualCost}
+                        onSave={(value) => handleActualCostChange(item.id, value)}
+                        color="green"
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {item.quantity ?? '-'}

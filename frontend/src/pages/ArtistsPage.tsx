@@ -5,6 +5,8 @@ import { modulesApi, lineItemsApi, statusesApi, categoriesApi, tagsApi, subLineI
 import type { LineItem, Status, Category, Tag, SubLineItemType, ModuleType } from '@event-management/shared';
 import { ArtistLineItemModal } from '../components/ArtistLineItemModal';
 import { SubLineItemModal } from '../components/SubLineItemModal';
+import { StatusDropdown } from '../components/StatusDropdown';
+import { InlineAmountInput } from '../components/InlineAmountInput';
 
 export function ArtistsPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -86,9 +88,34 @@ export function ArtistsPage() {
     setShowSubLineItemModal(true);
   };
 
-  const getStatusColor = (statusId: string) => {
-    const status = statuses.find(s => s.id === statusId);
-    return status?.color || '#6B7280';
+  const handleStatusChange = async (itemId: string, statusId: string | null) => {
+    try {
+      await lineItemsApi.update(itemId, { statusId: statusId || undefined });
+      loadData();
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      throw error;
+    }
+  };
+
+  const handlePlannedCostChange = async (itemId: string, plannedCost: number | null) => {
+    try {
+      await lineItemsApi.update(itemId, { plannedCost: plannedCost || undefined });
+      loadData();
+    } catch (error) {
+      console.error('Failed to update planned cost:', error);
+      throw error;
+    }
+  };
+
+  const handleActualCostChange = async (itemId: string, actualCost: number | null) => {
+    try {
+      await lineItemsApi.update(itemId, { actualCost: actualCost || undefined });
+      loadData();
+    } catch (error) {
+      console.error('Failed to update actual cost:', error);
+      throw error;
+    }
   };
 
   const formatCurrency = (amount?: number | null) => {
@@ -166,14 +193,12 @@ export function ArtistsPage() {
                       <h3 className="text-xl font-bold text-gray-900">
                         {(artist.metadata as any)?.artistName || artist.name}
                       </h3>
-                      {artist.status && (
-                        <span
-                          className="badge text-white text-xs"
-                          style={{ backgroundColor: getStatusColor(artist.status.id) }}
-                        >
-                          {artist.status.name}
-                        </span>
-                      )}
+                      <StatusDropdown
+                        statuses={statuses}
+                        currentStatus={artist.status || null}
+                        onStatusChange={(statusId) => handleStatusChange(artist.id, statusId)}
+                        size="sm"
+                      />
                     </div>
                     {artist.description && (
                       <p className="text-gray-600 ml-8 mb-3">{artist.description}</p>
@@ -182,19 +207,42 @@ export function ArtistsPage() {
                     {/* Cost Summary */}
                     <div className="ml-8 grid grid-cols-4 gap-4 mt-4">
                       <div>
-                        <p className="text-sm text-gray-500">Planned Cost</p>
-                        <p className="text-lg font-semibold text-blue-600">
-                          {formatCurrency(plannedTotal)}
-                          {subItems.length > 0 && (
-                            <span className="text-xs text-gray-500 ml-2">
-                              ({formatCurrency(subItems.reduce((sum, item) => sum + (item.plannedCost || 0), 0))} from sub-items)
-                            </span>
-                          )}
-                        </p>
+                        <p className="text-sm text-gray-500 mb-1">Planned Cost</p>
+                        <InlineAmountInput
+                          value={plannedTotal}
+                          onSave={(value) => handlePlannedCostChange(artist.id, value)}
+                          color="blue"
+                          className="text-lg"
+                        />
+                        {subItems.length > 0 && (() => {
+                          const subItemsPlannedTotal = subItems.reduce((sum, item) => sum + (item.plannedCost || 0), 0);
+                          const difference = plannedTotal - subItemsPlannedTotal;
+                          return (
+                            <div className="mt-1">
+                              <p className="text-xs text-gray-500">
+                                Sub-items: {formatCurrency(subItemsPlannedTotal)}
+                              </p>
+                              <p className={`text-xs font-medium ${
+                                difference > 0 
+                                  ? 'text-green-600' 
+                                  : difference < 0 
+                                  ? 'text-red-600' 
+                                  : 'text-gray-600'
+                              }`}>
+                                {difference > 0 ? '+' : ''}{formatCurrency(difference)} remaining
+                              </p>
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Actual Cost</p>
-                        <p className="text-lg font-semibold text-green-600">{formatCurrency(actualTotal)}</p>
+                        <p className="text-sm text-gray-500 mb-1">Actual Cost</p>
+                        <InlineAmountInput
+                          value={actualTotal}
+                          onSave={(value) => handleActualCostChange(artist.id, value)}
+                          color="green"
+                          className="text-lg"
+                        />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Variance</p>
@@ -267,14 +315,12 @@ export function ArtistsPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-medium text-gray-900">{subItem.name}</span>
-                                {subItem.status && (
-                                  <span
-                                    className="badge text-white text-xs"
-                                    style={{ backgroundColor: getStatusColor(subItem.status.id) }}
-                                  >
-                                    {subItem.status.name}
-                                  </span>
-                                )}
+                                <StatusDropdown
+                                  statuses={statuses}
+                                  currentStatus={subItem.status || null}
+                                  onStatusChange={(statusId) => handleStatusChange(subItem.id, statusId)}
+                                  size="sm"
+                                />
                               </div>
                               {subItem.description && (
                                 <p className="text-sm text-gray-600">{subItem.description}</p>
@@ -282,12 +328,20 @@ export function ArtistsPage() {
                             </div>
                             <div className="flex items-center gap-6">
                               <div className="text-right">
-                                <p className="text-sm text-gray-500">Planned</p>
-                                <p className="font-semibold text-blue-600">{formatCurrency(subItem.plannedCost)}</p>
+                                <p className="text-sm text-gray-500 mb-1">Planned</p>
+                                <InlineAmountInput
+                                  value={subItem.plannedCost}
+                                  onSave={(value) => handlePlannedCostChange(subItem.id, value)}
+                                  color="blue"
+                                />
                               </div>
                               <div className="text-right">
-                                <p className="text-sm text-gray-500">Actual</p>
-                                <p className="font-semibold text-green-600">{formatCurrency(subItem.actualCost)}</p>
+                                <p className="text-sm text-gray-500 mb-1">Actual</p>
+                                <InlineAmountInput
+                                  value={subItem.actualCost}
+                                  onSave={(value) => handleActualCostChange(subItem.id, value)}
+                                  color="green"
+                                />
                               </div>
                               <div className="flex gap-2">
                                 <button
