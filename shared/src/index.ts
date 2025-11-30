@@ -3,6 +3,7 @@ export * from './types/event';
 export * from './types/module';
 export * from './types/line-item';
 export * from './types/status';
+export type { StatusItemType } from './types/status';
 export * from './types/category';
 export * from './types/tag';
 export * from './types/finance';

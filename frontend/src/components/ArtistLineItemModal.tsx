@@ -16,15 +16,7 @@ interface ArtistLineItemModalProps {
   onSave: () => void;
 }
 
-const DEFAULT_SUB_ITEMS = [
-  'Artist Fee',
-  'Booking Fee',
-  'Travel Cost',
-  'Ground Cost',
-  'Hotel Cost',
-  'Hosp Rider Cost',
-  'Tech Rider Cost',
-];
+// DEFAULT_SUB_ITEMS removed - now using configured subLineItemTypes from metadata
 
 export function ArtistLineItemModal({
   eventId,
@@ -54,18 +46,47 @@ export function ArtistLineItemModal({
   useEffect(() => {
     if (lineItem) {
       const metadata = (lineItem.metadata as Record<string, any>) || {};
-      setFormData({
+      setFormData(prev => ({
         artistName: metadata.artistName || lineItem.name || '',
         plannedTotalCost: lineItem.plannedCost?.toString() || '',
-        statusId: lineItem.status?.id || '',
-        categoryId: lineItem.category?.id || '',
+        statusId: lineItem.status?.id || prev.statusId || statuses.find(s => s.isDefault)?.id || statuses[0]?.id || '',
+        categoryId: lineItem.category?.id || prev.categoryId || '',
         tagIds: lineItem.tags.map(t => t.id),
         agentContact: metadata.agentContact || '',
         selectedSubItems: lineItem.subLineItems?.map(item => item.name) || [],
         documents: metadata.documents || [],
-      });
+      }));
+    } else {
+      // Reset form when creating new artist - update statusId when statuses are loaded
+      setFormData(prev => ({
+        ...prev,
+        statusId: statuses.find(s => s.isDefault)?.id || statuses[0]?.id || prev.statusId || '',
+      }));
     }
   }, [lineItem, statuses]);
+
+  // Debug: Log props when they change
+  useEffect(() => {
+    console.log('🔵 ArtistLineItemModal props:', {
+      statusesLength: statuses.length,
+      statuses: statuses.map(s => ({ id: s.id, name: s.name, isDefault: s.isDefault })),
+      subLineItemTypesLength: subLineItemTypes.length,
+      subLineItemTypes: subLineItemTypes.map(t => ({ id: t.id, name: t.name, moduleType: t.moduleType })),
+      formDataStatusId: formData.statusId,
+      formDataSelectedSubItems: formData.selectedSubItems,
+    });
+  }, [statuses, subLineItemTypes]);
+
+  // Update formData when statuses are loaded (for new artists)
+  useEffect(() => {
+    if (!lineItem && statuses.length > 0 && !formData.statusId) {
+      const defaultStatusId = statuses.find(s => s.isDefault)?.id || statuses[0]?.id || '';
+      if (defaultStatusId) {
+        console.log('🔵 Setting default statusId:', defaultStatusId);
+        setFormData(prev => ({ ...prev, statusId: defaultStatusId }));
+      }
+    }
+  }, [statuses, lineItem, formData.statusId]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -98,31 +119,47 @@ export function ArtistLineItemModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Create main artist line item
-      const artistData = {
-        moduleType,
-        eventId,
-        name: formData.artistName,
-        plannedCost: formData.plannedTotalCost ? parseFloat(formData.plannedTotalCost) : undefined,
-        statusId: formData.statusId || undefined,
-        categoryId: formData.categoryId || undefined,
-        tagIds: formData.tagIds,
-        metadata: {
-          artistName: formData.artistName,
-          agentContact: formData.agentContact,
-          documents: formData.documents.map(doc => ({
-            name: doc.name,
-            url: doc.url, // In production, this would be the uploaded file URL
-          })),
-        },
-      };
-
       let artistLineItem: LineItem;
       if (lineItem) {
+        // Update: Don't send moduleType or eventId (they can't be changed)
+        const artistData = {
+          name: formData.artistName,
+          plannedCost: formData.plannedTotalCost ? parseFloat(formData.plannedTotalCost) : undefined,
+          statusId: formData.statusId || undefined,
+          categoryId: formData.categoryId || undefined,
+          tagIds: formData.tagIds,
+          metadata: {
+            artistName: formData.artistName,
+            agentContact: formData.agentContact,
+            documents: formData.documents.map(doc => ({
+              name: doc.name,
+              url: doc.url, // In production, this would be the uploaded file URL
+            })),
+          },
+        };
+        console.log('🔵 Updating artist with data:', artistData);
         const updated = await lineItemsApi.update(lineItem.id, artistData);
         artistLineItem = updated.data;
       } else {
-        const created = await lineItemsApi.create(artistData);
+        // Create: Include moduleType and eventId
+        const createData = {
+          moduleType,
+          eventId,
+          name: formData.artistName,
+          plannedCost: formData.plannedTotalCost ? parseFloat(formData.plannedTotalCost) : undefined,
+          statusId: formData.statusId || undefined,
+          categoryId: formData.categoryId || undefined,
+          tagIds: formData.tagIds,
+          metadata: {
+            artistName: formData.artistName,
+            agentContact: formData.agentContact,
+            documents: formData.documents.map(doc => ({
+              name: doc.name,
+              url: doc.url, // In production, this would be the uploaded file URL
+            })),
+          },
+        };
+        const created = await lineItemsApi.create(createData);
         artistLineItem = created.data;
         // Store the ID for ad-hoc sub-item creation
         setTempArtistId(artistLineItem.id);
@@ -156,7 +193,8 @@ export function ArtistLineItemModal({
               parentLineItemId: artistLineItem.id,
               name: subItemName,
               plannedCost: 0,
-              statusId: formData.statusId || undefined,
+              // Don't pass statusId - let backend find default sub status
+              statusId: undefined,
               metadata: {
                 subItemType: subItemType?.id,
               },
@@ -240,20 +278,49 @@ export function ArtistLineItemModal({
               </button>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {DEFAULT_SUB_ITEMS.map((itemName) => (
-                <label
-                  key={itemName}
-                  className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={formData.selectedSubItems.includes(itemName)}
-                    onChange={() => toggleSubItem(itemName)}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  />
-                  <span className="ml-3 text-sm font-medium text-gray-700">{itemName}</span>
-                </label>
-              ))}
+              {/* Debug: Show count */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="col-span-2 text-xs text-gray-400 mb-2">
+                  Debug: subLineItemTypes.length = {subLineItemTypes.length}, statuses.length = {statuses.length}
+                </div>
+              )}
+              {subLineItemTypes.length === 0 ? (
+                <div className="col-span-2 text-center py-4">
+                  <p className="text-sm text-gray-500 mb-2">
+                    {statuses.length === 0 ? 'Loading sub-line item types...' : 'No sub-line item types configured for Artists.'}
+                  </p>
+                  {statuses.length > 0 && (
+                    <p className="text-xs text-gray-400">
+                      Go to <strong>Manage Metadata</strong> → <strong>Sub-Line Item Types</strong> to add them.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                subLineItemTypes.map((type) => (
+                  <label
+                    key={type.id}
+                    className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.selectedSubItems.includes(type.name)}
+                      onChange={() => toggleSubItem(type.name)}
+                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    />
+                    <div className="ml-3 flex-1">
+                      <span className="text-sm font-medium text-gray-700">{type.name}</span>
+                      {type.description && (
+                        <p className="text-xs text-gray-500 mt-1">{type.description}</p>
+                      )}
+                    </div>
+                    {type.isDefault && (
+                      <span className="ml-2 px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded">
+                        Default
+                      </span>
+                    )}
+                  </label>
+                ))
+              )}
             </div>
           </div>
 
@@ -327,18 +394,22 @@ export function ArtistLineItemModal({
           {/* Status */}
           <div>
             <label className="label">Status</label>
-            <select
-              className="input"
-              value={formData.statusId}
-              onChange={(e) => setFormData({ ...formData, statusId: e.target.value })}
-            >
-              <option value="">None</option>
-              {statuses.map((status) => (
-                <option key={status.id} value={status.id}>
-                  {status.name}
-                </option>
-              ))}
-            </select>
+            {statuses.length === 0 ? (
+              <div className="text-sm text-gray-500 italic">Loading statuses...</div>
+            ) : (
+              <select
+                className="input"
+                value={formData.statusId}
+                onChange={(e) => setFormData({ ...formData, statusId: e.target.value })}
+              >
+                <option value="">None</option>
+                {statuses.map((status) => (
+                  <option key={status.id} value={status.id}>
+                    {status.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Category */}

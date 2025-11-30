@@ -7,135 +7,122 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Event {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  startDate   DateTime
-  endDate     DateTime
-  location    String?
-  status      String   @default("DRAFT")
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  lineItems   LineItem[]
-  categories  Category[]
-  tags        Tag[]
-  statuses    Status[]
-  subLineItemTypes SubLineItemType[]
-
-  @@index([status])
-  @@index([startDate])
-}
-
-model Status {
-  id          String   @id @default(uuid())
-  moduleType  String
-  name        String
-  color       String     @default("#6B7280")
-  order       Int        @default(0)
-  isDefault   Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  eventId     String
-  event       Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  lineItems   LineItem[]
-
-  @@unique([eventId, moduleType, name])
-  @@index([eventId, moduleType])
-}
-
 model Category {
-  id          String   @id @default(uuid())
+  id          String     @id
   moduleType  String
   name        String
   description String?
   color       String?
   createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  updatedAt   DateTime
+  eventId     String?
+  Event       Event?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  LineItem    LineItem[]
 
-  eventId     String
-  event       Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  lineItems   LineItem[]
-
-  @@unique([eventId, moduleType, name])
-  @@index([eventId, moduleType])
+  @@unique([moduleType, name])
+  @@index([eventId])
+  @@index([moduleType])
 }
 
-model Tag {
-  id          String   @id @default(uuid())
-  moduleType  String
-  name        String
-  color       String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+model Event {
+  id              String            @id
+  name            String
+  description     String?
+  startDate       DateTime
+  endDate         DateTime
+  location        String?
+  status          String            @default("DRAFT")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  Category        Category[]
+  LineItem        LineItem[]
+  Status          Status[]
+  SubLineItemType SubLineItemType[]
+  Tag             Tag[]
 
-  eventId     String
-  event       Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  lineItems   LineItem[] @relation("LineItemTags")
-
-  @@unique([eventId, moduleType, name])
-  @@index([eventId, moduleType])
+  @@index([startDate])
+  @@index([status])
 }
 
 model LineItem {
-  id          String   @id @default(uuid())
-  moduleType  String
-  eventId     String
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  name        String
-  description String?
-  quantity    Float?
-  unitPrice   Float?
-  totalPrice  Float?
-  plannedCost Float?   // Planned/budgeted cost
-  actualCost  Float?   // Actual spent cost
-  metadata    String?  // JSON stored as string
-
-  // Parent-child relationship for sub-line items
+  id               String     @id @default(uuid())
+  moduleType       String
+  eventId          String
+  name             String
+  description      String?
+  quantity         Float?
+  unitPrice        Float?
+  totalPrice       Float?
+  plannedCost      Float?
+  actualCost       Float?
+  metadata         String?
   parentLineItemId String?
-  parentLineItem   LineItem? @relation("LineItemSubItems", fields: [parentLineItemId], references: [id], onDelete: Cascade)
-  subLineItems      LineItem[] @relation("LineItemSubItems")
+  statusId         String?
+  categoryId       String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  Category         Category?  @relation(fields: [categoryId], references: [id])
+  Status           Status?    @relation(fields: [statusId], references: [id])
+  LineItem         LineItem?  @relation("LineItemToLineItem", fields: [parentLineItemId], references: [id], onDelete: Cascade)
+  other_LineItem   LineItem[] @relation("LineItemToLineItem")
+  Event            Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  Tag              Tag[]      @relation("LineItemTags")
 
-  statusId    String?
-  status      Status?    @relation(fields: [statusId], references: [id])
-  categoryId  String?
-  category    Category?  @relation(fields: [categoryId], references: [id])
-  tags        Tag[]      @relation("LineItemTags")
-
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  // Module-specific fields (stored in metadata JSON)
-  // Artists: artistName, performanceDate, performanceDuration, genre, contactEmail, contactPhone, contractSigned, paymentTerms
-  // Vendors: vendorName, vendorType, contactEmail, contactPhone, contractSigned, paymentTerms, deliveryDate
-  // Materials: materialType, supplier, deliveryDate, returnDate, isRental
-  // Food & Beverage: itemType, dietaryInfo, supplier, deliveryDate, servingSize, allergens
-  // Sponsors: sponsorName, sponsorType, contactEmail, contactPhone, contractSigned, benefits, logoUrl
-  // Marketing: channel, campaignName, targetAudience, startDate, endDate, reach, impressions
-
-  @@index([eventId])
-  @@index([moduleType])
-  @@index([statusId])
-  @@index([categoryId])
   @@index([parentLineItemId])
+  @@index([categoryId])
+  @@index([statusId])
+  @@index([moduleType])
+  @@index([eventId])
 }
 
-// Configuration for sub-line item types per module
+model Status {
+  id         String     @id
+  moduleType String
+  name       String
+  color      String     @default("#6B7280")
+  order      Int        @default(0)
+  isDefault  Boolean    @default(false)
+  itemType   String     @default("main")
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime
+  eventId    String?
+  LineItem   LineItem[]
+  Event      Event?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleType, itemType, name])
+  @@index([eventId])
+  @@index([moduleType, itemType])
+}
+
 model SubLineItemType {
   id          String   @id @default(uuid())
   moduleType  String
-  eventId     String
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String?
   name        String
   description String?
   isDefault   Boolean  @default(false)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  event       Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  @@unique([eventId, moduleType, name])
-  @@index([eventId, moduleType])
+  @@unique([moduleType, name])
+  @@index([eventId])
+  @@index([moduleType])
 }
 
+model Tag {
+  id         String     @id
+  moduleType String
+  name       String
+  color      String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime
+  eventId    String?
+  Event      Event?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  LineItem   LineItem[] @relation("LineItemTags")
+
+  @@unique([moduleType, name])
+  @@index([eventId])
+  @@index([moduleType])
+}

@@ -13,19 +13,19 @@ financeRoutes.get('/:eventId', async (req, res) => {
     const lineItems = await prisma.lineItem.findMany({
       where: { eventId },
       include: {
-        status: true,
-        category: true,
-        tags: true,
+        Status: true,
+        Category: true,
+        Tag: true,
       },
     });
 
     // Calculate totals
     const totalBudget = lineItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
     const totalSpent = lineItems
-      .filter(item => item.status.name.toLowerCase().includes('paid') || item.status.name.toLowerCase().includes('completed'))
+      .filter(item => item.Status && (item.Status.name.toLowerCase().includes('paid') || item.Status.name.toLowerCase().includes('completed')))
       .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
     const totalCommitted = lineItems
-      .filter(item => item.status.name.toLowerCase().includes('confirmed') || item.status.name.toLowerCase().includes('committed'))
+      .filter(item => item.Status && (item.Status.name.toLowerCase().includes('confirmed') || item.Status.name.toLowerCase().includes('committed')))
       .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
 
     // Group by module
@@ -33,10 +33,10 @@ financeRoutes.get('/:eventId', async (req, res) => {
       const moduleItems = lineItems.filter(item => item.moduleType === moduleType);
       const budget = moduleItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
       const spent = moduleItems
-        .filter(item => item.status.name.toLowerCase().includes('paid') || item.status.name.toLowerCase().includes('completed'))
+        .filter(item => item.Status && (item.Status.name.toLowerCase().includes('paid') || item.Status.name.toLowerCase().includes('completed')))
         .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
       const committed = moduleItems
-        .filter(item => item.status.name.toLowerCase().includes('confirmed') || item.status.name.toLowerCase().includes('committed'))
+        .filter(item => item.Status && (item.Status.name.toLowerCase().includes('confirmed') || item.Status.name.toLowerCase().includes('committed')))
         .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
 
       return {
@@ -53,10 +53,10 @@ financeRoutes.get('/:eventId', async (req, res) => {
     // Group by category
     const categoryMap = new Map<string, { name: string; amount: number; count: number }>();
     lineItems.forEach(item => {
-      if (item.category) {
-        const existing = categoryMap.get(item.categoryId || '') || { name: item.category.name, amount: 0, count: 0 };
+      if (item.Category) {
+        const existing = categoryMap.get(item.categoryId || '') || { name: item.Category.name, amount: 0, count: 0 };
         categoryMap.set(item.categoryId || '', {
-          name: item.category.name,
+          name: item.Category.name,
           amount: existing.amount + (item.totalPrice || 0),
           count: existing.count + 1,
         });
@@ -72,12 +72,14 @@ financeRoutes.get('/:eventId', async (req, res) => {
     // Group by status
     const statusMap = new Map<string, { name: string; amount: number; count: number }>();
     lineItems.forEach(item => {
-      const existing = statusMap.get(item.statusId) || { name: item.status.name, amount: 0, count: 0 };
-      statusMap.set(item.statusId, {
-        name: item.status.name,
-        amount: existing.amount + (item.totalPrice || 0),
-        count: existing.count + 1,
-      });
+      if (item.Status) {
+        const existing = statusMap.get(item.statusId || '') || { name: item.Status.name, amount: 0, count: 0 };
+        statusMap.set(item.statusId || '', {
+          name: item.Status.name,
+          amount: existing.amount + (item.totalPrice || 0),
+          count: existing.count + 1,
+        });
+      }
     });
     const byStatus = Array.from(statusMap.entries()).map(([id, data]) => ({
       statusId: id,
@@ -109,9 +111,9 @@ financeRoutes.get('/:eventId/line-items', async (req, res) => {
     const lineItems = await prisma.lineItem.findMany({
       where: { eventId: req.params.eventId },
       include: {
-        status: true,
-        category: true,
-        tags: true,
+        Status: true,
+        Category: true,
+        Tag: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -121,8 +123,8 @@ financeRoutes.get('/:eventId/line-items', async (req, res) => {
       moduleType: item.moduleType,
       moduleName: MODULE_DISPLAY_NAMES[item.moduleType],
       lineItemName: item.name,
-      categoryName: item.category?.name,
-      statusName: item.status.name,
+      categoryName: item.Category?.name,
+      statusName: item.Status?.name,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       totalPrice: item.totalPrice || 0,

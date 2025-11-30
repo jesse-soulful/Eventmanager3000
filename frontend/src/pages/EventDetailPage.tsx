@@ -88,7 +88,7 @@ export function EventDetailPage() {
             <p className="text-sm text-gray-600">Manage statuses, categories, and tags for all modules</p>
           </div>
           <Link
-            to={`/events/${eventId}/manage-metadata`}
+            to="/manage-metadata"
             className="btn btn-primary flex items-center gap-2"
           >
             <Settings className="w-5 h-5" />

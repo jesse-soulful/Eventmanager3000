@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Plus, ArrowLeft, ChevronDown, ChevronRight, DollarSign, Edit2, Trash2 } from 'lucide-react';
+import { Plus, ArrowLeft, ChevronDown, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import { modulesApi, lineItemsApi, statusesApi, categoriesApi, tagsApi, subLineItemTypesApi } from '../lib/api';
 import type { LineItem, Status, Category, Tag, SubLineItemType, ModuleType } from '@event-management/shared';
+import { ModuleType as ModuleTypeEnum } from '@event-management/shared';
 import { ArtistLineItemModal } from '../components/ArtistLineItemModal';
 import { SubLineItemModal } from '../components/SubLineItemModal';
 import { StatusDropdown } from '../components/StatusDropdown';
@@ -11,7 +12,8 @@ import { InlineAmountInput } from '../components/InlineAmountInput';
 export function ArtistsPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
-  const [statuses, setStatuses] = useState<Status[]>([]);
+  const [mainStatuses, setMainStatuses] = useState<Status[]>([]);
+  const [subStatuses, setSubStatuses] = useState<Status[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [subLineItemTypes, setSubLineItemTypes] = useState<SubLineItemType[]>([]);
@@ -22,7 +24,7 @@ export function ArtistsPage() {
   const [parentItemId, setParentItemId] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
-  const moduleType: ModuleType = 'ARTISTS';
+  const moduleType: ModuleType = ModuleTypeEnum.ARTISTS;
 
   useEffect(() => {
     if (eventId) {
@@ -33,20 +35,36 @@ export function ArtistsPage() {
   const loadData = async () => {
     if (!eventId) return;
     try {
-      const [itemsRes, statusesRes, categoriesRes, tagsRes, typesRes] = await Promise.all([
+      const [itemsRes, mainStatusesRes, subStatusesRes, categoriesRes, tagsRes, typesRes] = await Promise.all([
         modulesApi.getLineItems(eventId, moduleType),
-        statusesApi.getByModule(eventId, moduleType),
-        categoriesApi.getByModule(eventId, moduleType),
-        tagsApi.getByModule(eventId, moduleType),
-        subLineItemTypesApi.getByModule(eventId, moduleType),
+        statusesApi.getByModule(moduleType, 'main'),
+        statusesApi.getByModule(moduleType, 'sub'),
+        categoriesApi.getByModule(moduleType),
+        tagsApi.getByModule(moduleType),
+        subLineItemTypesApi.getByModule(moduleType),
       ]);
       setLineItems(itemsRes.data);
-      setStatuses(statusesRes.data);
+      setMainStatuses(mainStatusesRes.data);
+      setSubStatuses(subStatusesRes.data);
       setCategories(categoriesRes.data);
       setTags(tagsRes.data);
       setSubLineItemTypes(typesRes.data);
-    } catch (error) {
+      console.log('🔵 ArtistsPage loaded data:', {
+        mainStatuses: mainStatusesRes.data.length,
+        subStatuses: subStatusesRes.data.length,
+        categories: categoriesRes.data.length,
+        tags: tagsRes.data.length,
+        subLineItemTypes: typesRes.data.length,
+        subLineItemTypesData: typesRes.data,
+        mainStatusesData: mainStatusesRes.data,
+      });
+    } catch (error: any) {
       console.error('Failed to load data:', error);
+      if (error.response) {
+        console.error('API Error:', error.response.status, error.response.data);
+      }
+      // Set empty array on error to prevent undefined issues
+      setSubLineItemTypes([]);
     } finally {
       setLoading(false);
     }
@@ -80,7 +98,7 @@ export function ArtistsPage() {
       eventId: eventId!,
       name: type.name,
       description: type.description,
-      statusId: statuses.find(s => s.isDefault)?.id || statuses[0]?.id || '',
+      statusId: subStatuses.find(s => s.isDefault)?.id || subStatuses[0]?.id || '',
       tags: [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -194,7 +212,7 @@ export function ArtistsPage() {
                         {(artist.metadata as any)?.artistName || artist.name}
                       </h3>
                       <StatusDropdown
-                        statuses={statuses}
+                        statuses={mainStatuses}
                         currentStatus={artist.status || null}
                         onStatusChange={(statusId) => handleStatusChange(artist.id, statusId)}
                         size="sm"
@@ -316,7 +334,7 @@ export function ArtistsPage() {
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-medium text-gray-900">{subItem.name}</span>
                                 <StatusDropdown
-                                  statuses={statuses}
+                                  statuses={subStatuses}
                                   currentStatus={subItem.status || null}
                                   onStatusChange={(statusId) => handleStatusChange(subItem.id, statusId)}
                                   size="sm"
@@ -377,10 +395,11 @@ export function ArtistsPage() {
       {/* Create/Edit Artist Modal */}
       {showCreateModal && (
         <ArtistLineItemModal
+          key={`modal-${subLineItemTypes.length}-${showCreateModal}`} // Force re-render when subLineItemTypes changes
           eventId={eventId!}
           moduleType={moduleType}
           lineItem={editingItem}
-          statuses={statuses}
+          statuses={mainStatuses}
           categories={categories}
           tags={tags}
           subLineItemTypes={subLineItemTypes}
@@ -403,7 +422,7 @@ export function ArtistsPage() {
           moduleType={moduleType}
           parentLineItemId={parentItemId}
           lineItem={editingItem}
-          statuses={statuses}
+          statuses={subStatuses}
           categories={categories}
           tags={tags}
           onClose={() => {

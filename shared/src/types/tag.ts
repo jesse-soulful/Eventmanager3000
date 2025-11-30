@@ -10,6 +10,7 @@ export interface Tag {
 }
 
 export interface CreateTagInput {
+  eventId?: string; // Optional - null/undefined means global metadata
   moduleType: ModuleType;
   name: string;
   color?: string;

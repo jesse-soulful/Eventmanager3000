@@ -17,7 +17,7 @@ export function CategoryModal({ category, onClose, onSave }: CategoryModalProps)
     if (category) {
       setFormData({
         name: category.name,
-        color: category.color,
+        color: category.color || '#10B981',
       });
     }
   }, [category]);

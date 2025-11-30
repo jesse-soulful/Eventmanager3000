@@ -17,7 +17,7 @@ export function TagModal({ tag, onClose, onSave }: TagModalProps) {
     if (tag) {
       setFormData({
         name: tag.name,
-        color: tag.color,
+        color: tag.color || '#10B981',
       });
     }
   }, [tag]);

@@ -1,58 +1,63 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
-import { statusesApi, categoriesApi, tagsApi } from '../lib/api';
-import type { Status, Category, Tag, ModuleType } from '@event-management/shared';
-import { MODULE_DISPLAY_NAMES } from '@event-management/shared';
+import { statusesApi, categoriesApi, tagsApi, subLineItemTypesApi } from '../lib/api';
+import type { Status, Category, Tag, SubLineItemType, ModuleType, StatusItemType } from '@event-management/shared';
+import { MODULE_DISPLAY_NAMES, ModuleType as ModuleTypeEnum } from '@event-management/shared';
 import { StatusModal } from '../components/StatusModal';
 import { CategoryModal } from '../components/CategoryModal';
 import { TagModal } from '../components/TagModal';
+import { SubLineItemTypeModal } from '../components/SubLineItemTypeModal';
 
 const MODULE_TYPES: ModuleType[] = [
-  'ARTISTS',
-  'VENDORS',
-  'MATERIALS',
-  'FOOD_BEVERAGE',
-  'SPONSORS',
-  'MARKETING',
+  ModuleTypeEnum.ARTISTS,
+  ModuleTypeEnum.VENDORS,
+  ModuleTypeEnum.MATERIALS,
+  ModuleTypeEnum.FOOD_BEVERAGE,
+  ModuleTypeEnum.SPONSORS,
+  ModuleTypeEnum.MARKETING,
 ];
 
 export function ManageMetadataPage() {
-  const { eventId } = useParams<{ eventId: string }>();
-  const [activeTab, setActiveTab] = useState<'statuses' | 'categories' | 'tags'>('statuses');
-  const [selectedModule, setSelectedModule] = useState<ModuleType>('ARTISTS');
+  const [activeTab, setActiveTab] = useState<'statuses' | 'categories' | 'tags' | 'subLineItemTypes'>('statuses');
+  const [selectedModule, setSelectedModule] = useState<ModuleType>(ModuleTypeEnum.ARTISTS);
   
-  const [statuses, setStatuses] = useState<Status[]>([]);
+  const [mainStatuses, setMainStatuses] = useState<Status[]>([]);
+  const [subStatuses, setSubStatuses] = useState<Status[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [subLineItemTypes, setSubLineItemTypes] = useState<SubLineItemType[]>([]);
   
   const [editingStatus, setEditingStatus] = useState<Status | null>(null);
+  const [editingStatusItemType, setEditingStatusItemType] = useState<StatusItemType>('main');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [editingSubLineItemType, setEditingSubLineItemType] = useState<SubLineItemType | null>(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showTagModal, setShowTagModal] = useState(false);
+  const [showSubLineItemTypeModal, setShowSubLineItemTypeModal] = useState(false);
   
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (eventId) {
-      loadData();
-    }
-  }, [eventId, selectedModule]);
+    loadData();
+  }, [selectedModule]);
 
   const loadData = async () => {
-    if (!eventId) return;
     setLoading(true);
     try {
-      const [statusesRes, categoriesRes, tagsRes] = await Promise.all([
-        statusesApi.getByModule(eventId, selectedModule),
-        categoriesApi.getByModule(eventId, selectedModule),
-        tagsApi.getByModule(eventId, selectedModule),
+      const [mainStatusesRes, subStatusesRes, categoriesRes, tagsRes, subLineItemTypesRes] = await Promise.all([
+        statusesApi.getByModule(selectedModule, 'main'),
+        statusesApi.getByModule(selectedModule, 'sub'),
+        categoriesApi.getByModule(selectedModule),
+        tagsApi.getByModule(selectedModule),
+        subLineItemTypesApi.getByModule(selectedModule),
       ]);
-      setStatuses(statusesRes.data);
+      setMainStatuses(mainStatusesRes.data);
+      setSubStatuses(subStatusesRes.data);
       setCategories(categoriesRes.data);
       setTags(tagsRes.data);
+      setSubLineItemTypes(subLineItemTypesRes.data);
     } catch (error) {
       console.error('Failed to load metadata:', error);
     } finally {
@@ -60,38 +65,93 @@ export function ManageMetadataPage() {
     }
   };
 
-  const handleCreateStatus = () => {
+  const handleCreateStatus = (itemType: StatusItemType) => {
     setEditingStatus(null);
+    setEditingStatusItemType(itemType);
     setShowStatusModal(true);
   };
 
   const handleUpdateStatus = (status: Status) => {
     setEditingStatus(status);
+    setEditingStatusItemType(status.itemType);
     setShowStatusModal(true);
   };
 
-  const handleSaveStatus = async (data: { name: string; color: string; isDefault: boolean; order: number }) => {
-    if (!eventId) return;
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const savingStatusRef = useRef<string | null>(null); // Track the status being saved
+
+  const handleSaveStatus = async (data: { name: string; color: string; isDefault: boolean; order: number; itemType: StatusItemType }) => {
+    // Create a key WITHOUT timestamp for duplicate detection
+    const duplicateCheckKey = `${data.name}-${data.itemType}`;
+    
+    console.log('🚨 handleSaveStatus CALLED:', { name: data.name, itemType: data.itemType, duplicateCheckKey });
+    console.log('🚨 Current state:', { isSavingStatus, savingStatusRef: savingStatusRef.current });
+    
+    // AGGRESSIVE duplicate prevention
+    if (isSavingStatus) {
+      console.warn('❌ BLOCKED: Already saving');
+      return;
+    }
+    
+    // Check if we're already saving this exact status (same name + itemType)
+    if (savingStatusRef.current === duplicateCheckKey) {
+      console.warn('❌ BLOCKED: Duplicate save attempt for:', duplicateCheckKey);
+      return;
+    }
+    
+    // Set flags IMMEDIATELY
+    setIsSavingStatus(true);
+    savingStatusRef.current = duplicateCheckKey;
+    
+    // Small delay to ensure state is set
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
     try {
+      console.log('✅ STARTING status creation:', { name: data.name, itemType: data.itemType, duplicateCheckKey });
+      console.log('✅ VERIFYING itemType is:', data.itemType, 'type:', typeof data.itemType);
+      
       if (editingStatus) {
         await statusesApi.update(editingStatus.id, {
-          ...data,
+          name: data.name,
+          color: data.color,
+          isDefault: data.isDefault,
           order: editingStatus.order,
+          itemType: data.itemType,
         });
       } else {
-        await statusesApi.create({
-          eventId,
-          moduleType: selectedModule,
-          ...data,
-          order: statuses.length,
-        });
+            const statusesForType = data.itemType === 'main' ? mainStatuses : subStatuses;
+            // Only create ONE status with the specified itemType - NO DUPLICATES
+            // eventId is optional - undefined means global metadata
+            const createPayload = {
+              moduleType: selectedModule,
+              name: data.name,
+              color: data.color,
+              order: statusesForType.length,
+              isDefault: data.isDefault,
+              itemType: data.itemType as 'main' | 'sub', // Explicitly pass itemType - ONLY ONE
+            };
+        console.log('📤 Sending create request:', createPayload);
+        console.log('📤 VERIFYING payload itemType:', createPayload.itemType, 'type:', typeof createPayload.itemType);
+        console.log('📤 About to call statusesApi.create with itemType:', createPayload.itemType);
+        const result = await statusesApi.create(createPayload);
+        console.log('✅ Status created response:', result.data);
+        console.log('✅ Created status itemType:', result.data.itemType);
       }
+      
       setShowStatusModal(false);
       setEditingStatus(null);
-      loadData();
-    } catch (error) {
-      console.error('Failed to save status:', error);
-      alert('Failed to save status');
+      savingStatusRef.current = null; // Clear before loadData
+      await loadData();
+    } catch (error: any) {
+      console.error('❌ Failed to save status:', error);
+      alert(`Failed to save status: ${error?.response?.data?.error || error.message}`);
+      savingStatusRef.current = null;
+    } finally {
+      setIsSavingStatus(false);
+      // Clear ref after delay
+      setTimeout(() => {
+        savingStatusRef.current = null;
+      }, 3000);
     }
   };
 
@@ -117,13 +177,11 @@ export function ManageMetadataPage() {
   };
 
   const handleSaveCategory = async (data: { name: string; color: string }) => {
-    if (!eventId) return;
     try {
       if (editingCategory) {
         await categoriesApi.update(editingCategory.id, data);
       } else {
         await categoriesApi.create({
-          eventId,
           moduleType: selectedModule,
           ...data,
         });
@@ -159,13 +217,11 @@ export function ManageMetadataPage() {
   };
 
   const handleSaveTag = async (data: { name: string; color: string }) => {
-    if (!eventId) return;
     try {
       if (editingTag) {
         await tagsApi.update(editingTag.id, data);
       } else {
         await tagsApi.create({
-          eventId,
           moduleType: selectedModule,
           ...data,
         });
@@ -187,6 +243,46 @@ export function ManageMetadataPage() {
     } catch (error) {
       console.error('Failed to delete tag:', error);
       alert('Failed to delete tag');
+    }
+  };
+
+  const handleCreateSubLineItemType = () => {
+    setEditingSubLineItemType(null);
+    setShowSubLineItemTypeModal(true);
+  };
+
+  const handleUpdateSubLineItemType = (type: SubLineItemType) => {
+    setEditingSubLineItemType(type);
+    setShowSubLineItemTypeModal(true);
+  };
+
+  const handleSaveSubLineItemType = async (data: { name: string; description: string; isDefault: boolean; order: number }) => {
+    try {
+      if (editingSubLineItemType) {
+        await subLineItemTypesApi.update(editingSubLineItemType.id, data);
+      } else {
+        await subLineItemTypesApi.create({
+          moduleType: selectedModule,
+          ...data,
+        });
+      }
+      setShowSubLineItemTypeModal(false);
+      setEditingSubLineItemType(null);
+      loadData();
+    } catch (error) {
+      console.error('Failed to save sub-line item type:', error);
+      alert('Failed to save sub-line item type');
+    }
+  };
+
+  const handleDeleteSubLineItemType = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this sub-line item type?')) return;
+    try {
+      await subLineItemTypesApi.delete(id);
+      loadData();
+    } catch (error) {
+      console.error('Failed to delete sub-line item type:', error);
+      alert('Failed to delete sub-line item type');
     }
   };
 
@@ -231,7 +327,7 @@ export function ManageMetadataPage() {
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >
-          Statuses ({statuses.length})
+          Statuses ({mainStatuses.length + subStatuses.length})
         </button>
         <button
           onClick={() => setActiveTab('categories')}
@@ -253,56 +349,129 @@ export function ManageMetadataPage() {
         >
           Tags ({tags.length})
         </button>
+        <button
+          onClick={() => setActiveTab('subLineItemTypes')}
+          className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+            activeTab === 'subLineItemTypes'
+              ? 'border-primary-600 text-primary-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Sub-Line Item Types ({subLineItemTypes.length})
+        </button>
       </div>
 
       {/* Statuses Tab */}
       {activeTab === 'statuses' && (
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Statuses</h2>
-            <button onClick={handleCreateStatus} className="btn btn-primary">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Status
-            </button>
+        <div className="space-y-6">
+          {/* Main Line Item Statuses */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Main Line Item Statuses</h2>
+                <p className="text-sm text-gray-500 mt-1">Statuses for general line items (e.g., "Draft", "Approved", "Completed")</p>
+              </div>
+              <button onClick={() => handleCreateStatus('main')} className="btn btn-primary">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Main Status
+              </button>
+            </div>
+            <div className="space-y-2">
+              {mainStatuses.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">No main statuses yet. Create one to get started.</p>
+              ) : (
+                mainStatuses.map((status) => (
+                  <div
+                    key={status.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: status.color }}
+                      />
+                      <span className="font-medium text-gray-900">{status.name}</span>
+                      {status.isDefault && (
+                        <span className="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleUpdateStatus(status)}
+                        className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStatus(status.id)}
+                        className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-          <div className="space-y-2">
-            {statuses.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No statuses yet. Create one to get started.</p>
-            ) : (
-              statuses.map((status) => (
-                <div
-                  key={status.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: status.color }}
-                    />
-                    <span className="font-medium text-gray-900">{status.name}</span>
-                    {status.isDefault && (
-                      <span className="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded">
-                        Default
-                      </span>
-                    )}
+
+          {/* Sub-Line Item Statuses */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Sub-Line Item Statuses</h2>
+                <p className="text-sm text-gray-500 mt-1">Statuses for to-do list items (e.g., "To Do", "In Progress", "Done")</p>
+              </div>
+              <button onClick={() => handleCreateStatus('sub')} className="btn btn-primary">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Sub Status
+              </button>
+            </div>
+            <div className="space-y-2">
+              {subStatuses.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">No sub statuses yet. Create one to get started.</p>
+              ) : (
+                subStatuses.map((status) => (
+                  <div
+                    key={status.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: status.color }}
+                      />
+                      <span className="font-medium text-gray-900">{status.name}</span>
+                      {status.isDefault && (
+                        <span className="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleUpdateStatus(status)}
+                        className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStatus(status.id)}
+                        className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleUpdateStatus(status)}
-                      className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteStatus(status.id)}
-                      className="p-2 text-gray-600 hover:text-red-600 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -401,10 +570,67 @@ export function ManageMetadataPage() {
         </div>
       )}
 
+      {/* Sub-Line Item Types Tab */}
+      {activeTab === 'subLineItemTypes' && (
+        <div className="card">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Sub-Line Item Types</h2>
+            <button onClick={handleCreateSubLineItemType} className="btn btn-primary flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add Sub-Line Item Type
+            </button>
+          </div>
+          {subLineItemTypes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No sub-line item types yet. Create one to get started.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {subLineItemTypes.map((type) => (
+                <div
+                  key={type.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-gray-900">{type.name}</h3>
+                      {type.isDefault && (
+                        <span className="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                    {type.description && (
+                      <p className="text-sm text-gray-600 mt-1">{type.description}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">Order: {type.order}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleUpdateSubLineItemType(type)}
+                      className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSubLineItemType(type.id)}
+                      className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Modals */}
       {showStatusModal && (
         <StatusModal
           status={editingStatus}
+          itemType={editingStatusItemType}
           onClose={() => {
             setShowStatusModal(false);
             setEditingStatus(null);
@@ -432,6 +658,17 @@ export function ManageMetadataPage() {
             setEditingTag(null);
           }}
           onSave={handleSaveTag}
+        />
+      )}
+
+      {showSubLineItemTypeModal && (
+        <SubLineItemTypeModal
+          subLineItemType={editingSubLineItemType}
+          onClose={() => {
+            setShowSubLineItemTypeModal(false);
+            setEditingSubLineItemType(null);
+          }}
+          onSave={handleSaveSubLineItemType}
         />
       )}
     </div>

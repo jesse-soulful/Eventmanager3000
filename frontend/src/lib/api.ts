@@ -54,28 +54,39 @@ export const modulesApi = {
     api.get<LineItem[]>(`/modules/${eventId}/${moduleType}`),
 };
 
-// Statuses
+// Statuses (global metadata - no eventId required)
 export const statusesApi = {
-  getByModule: (eventId: string, moduleType: ModuleType) =>
-    api.get<Status[]>(`/statuses/${eventId}/${moduleType}`),
-  create: (data: CreateStatusInput) => api.post<Status>('/statuses', data),
+  getByModule: (moduleType: ModuleType, itemType?: 'main' | 'sub') => {
+    const url = `/statuses/${moduleType}${itemType ? `?itemType=${itemType}` : ''}`;
+    return api.get<Status[]>(url);
+  },
+  create: (data: CreateStatusInput) => {
+    console.log('🔵 statusesApi.create called with:', data);
+    const result = api.post<Status>('/statuses', data);
+    result.then(res => {
+      console.log('🔵 statusesApi.create response:', res.data);
+    }).catch(err => {
+      console.error('🔵 statusesApi.create error:', err);
+    });
+    return result;
+  },
   update: (id: string, data: UpdateStatusInput) => api.put<Status>(`/statuses/${id}`, data),
   delete: (id: string) => api.delete(`/statuses/${id}`),
 };
 
-// Categories
+// Categories (global metadata - no eventId required)
 export const categoriesApi = {
-  getByModule: (eventId: string, moduleType: ModuleType) =>
-    api.get<Category[]>(`/categories/${eventId}/${moduleType}`),
+  getByModule: (moduleType: ModuleType) =>
+    api.get<Category[]>(`/categories/${moduleType}`),
   create: (data: CreateCategoryInput) => api.post<Category>('/categories', data),
   update: (id: string, data: UpdateCategoryInput) => api.put<Category>(`/categories/${id}`, data),
   delete: (id: string) => api.delete(`/categories/${id}`),
 };
 
-// Tags
+// Tags (global metadata - no eventId required)
 export const tagsApi = {
-  getByModule: (eventId: string, moduleType: ModuleType) =>
-    api.get<Tag[]>(`/tags/${eventId}/${moduleType}`),
+  getByModule: (moduleType: ModuleType) =>
+    api.get<Tag[]>(`/tags/${moduleType}`),
   create: (data: CreateTagInput) => api.post<Tag>('/tags', data),
   update: (id: string, data: UpdateTagInput) => api.put<Tag>(`/tags/${id}`, data),
   delete: (id: string) => api.delete(`/tags/${id}`),
@@ -87,10 +98,10 @@ export const financeApi = {
   getLineItems: (eventId: string) => api.get<FinanceLineItem[]>(`/finance/${eventId}/line-items`),
 };
 
-// Sub-Line Item Types
+// Sub-Line Item Types (global metadata - no eventId required)
 export const subLineItemTypesApi = {
-  getByModule: (eventId: string, moduleType: ModuleType) =>
-    api.get<SubLineItemType[]>(`/sub-line-item-types/${eventId}/${moduleType}`),
+  getByModule: (moduleType: ModuleType) =>
+    api.get<SubLineItemType[]>(`/sub-line-item-types/${moduleType}`),
   create: (data: CreateSubLineItemTypeInput) => api.post<SubLineItemType>('/sub-line-item-types', data),
   update: (id: string, data: UpdateSubLineItemTypeInput) => api.put<SubLineItemType>(`/sub-line-item-types/${id}`, data),
   delete: (id: string) => api.delete(`/sub-line-item-types/${id}`),

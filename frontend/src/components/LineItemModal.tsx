@@ -45,7 +45,7 @@ export function LineItemModal({
         unitPrice: lineItem.unitPrice?.toString() || '',
         plannedCost: lineItem.plannedCost?.toString() || '',
         actualCost: lineItem.actualCost?.toString() || '',
-        statusId: lineItem.status.id,
+        statusId: lineItem.status?.id || '',
         categoryId: lineItem.category?.id || '',
         tagIds: lineItem.tags.map(t => t.id),
         metadata: (lineItem.metadata as Record<string, any>) || {},

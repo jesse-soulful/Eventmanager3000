@@ -4,9 +4,11 @@ import App from './App';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  <App />
+  // Temporarily disabled StrictMode to prevent double-rendering issues
+  // <React.StrictMode>
+  //   <App />
+  // </React.StrictMode>,
 );
 
 

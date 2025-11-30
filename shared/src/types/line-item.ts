@@ -77,7 +77,7 @@ export interface UpdateLineItemInput {
 export interface SubLineItemType {
   id: string;
   moduleType: string;
-  eventId: string;
+  eventId?: string | null; // Optional - null means global metadata
   name: string;
   description?: string;
   isDefault: boolean;
@@ -88,7 +88,7 @@ export interface SubLineItemType {
 
 export interface CreateSubLineItemTypeInput {
   moduleType: string;
-  eventId: string;
+  eventId?: string; // Optional - null/undefined means global metadata
   name: string;
   description?: string;
   isDefault?: boolean;

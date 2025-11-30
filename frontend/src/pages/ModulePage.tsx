@@ -31,9 +31,9 @@ export function ModulePage() {
     try {
       const [itemsRes, statusesRes, categoriesRes, tagsRes] = await Promise.all([
         modulesApi.getLineItems(eventId, moduleTypeEnum),
-        statusesApi.getByModule(eventId, moduleTypeEnum),
-        categoriesApi.getByModule(eventId, moduleTypeEnum),
-        tagsApi.getByModule(eventId, moduleTypeEnum),
+        statusesApi.getByModule(moduleTypeEnum, 'main'), // Only main statuses for module page (no sub-items here)
+        categoriesApi.getByModule(moduleTypeEnum),
+        tagsApi.getByModule(moduleTypeEnum),
       ]);
       setLineItems(itemsRes.data);
       setStatuses(statusesRes.data);

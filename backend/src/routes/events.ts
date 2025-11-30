@@ -21,11 +21,11 @@ eventRoutes.get('/:id', async (req, res) => {
     const event = await prisma.event.findUnique({
       where: { id: req.params.id },
       include: {
-        lineItems: {
+        LineItem: {
           include: {
-            status: true,
-            category: true,
-            tags: true,
+            Status: true,
+            Category: true,
+            Tag: true,
           },
         },
       },
@@ -34,8 +34,9 @@ eventRoutes.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Event not found' });
     }
     res.json(event);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch event' });
+  } catch (error: any) {
+    console.error('Error fetching event:', error);
+    res.status(500).json({ error: 'Failed to fetch event', details: error?.message });
   }
 });
 

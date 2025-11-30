@@ -11,6 +11,7 @@ export interface Category {
 }
 
 export interface CreateCategoryInput {
+  eventId?: string; // Optional - null/undefined means global metadata
   moduleType: ModuleType;
   name: string;
   description?: string;

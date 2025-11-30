@@ -4,12 +4,12 @@ import { ModuleType } from '@event-management/shared';
 
 export const categoryRoutes = Router();
 
-// Get categories for a module type in an event
-categoryRoutes.get('/:eventId/:moduleType', async (req, res) => {
+// Get categories for a module type (global metadata)
+categoryRoutes.get('/:moduleType', async (req, res) => {
   try {
     const categories = await prisma.category.findMany({
       where: {
-        eventId: req.params.eventId,
+        eventId: null, // Only return global metadata
         moduleType: req.params.moduleType as ModuleType,
       },
       orderBy: { name: 'asc' },
@@ -24,9 +24,35 @@ categoryRoutes.get('/:eventId/:moduleType', async (req, res) => {
 categoryRoutes.post('/', async (req, res) => {
   try {
     const { eventId, moduleType, name, description, color } = req.body;
+    
+    // Metadata is now global - eventId is optional
+    let validatedEventId: string | null = null;
+    if (eventId) {
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+      });
+      if (!event) {
+        return res.status(404).json({ error: `Event with id ${eventId} not found` });
+      }
+      validatedEventId = eventId;
+    }
+    
+    // Check if category already exists (global)
+    const existing = await prisma.category.findFirst({
+      where: {
+        eventId: null,
+        moduleType: moduleType as ModuleType,
+        name,
+      },
+    });
+    
+    if (existing) {
+      return res.status(409).json({ error: 'Category with this name already exists' });
+    }
+    
     const category = await prisma.category.create({
       data: {
-        eventId,
+        eventId: validatedEventId, // null for global metadata
         moduleType: moduleType as ModuleType,
         name,
         description,
@@ -34,7 +60,10 @@ categoryRoutes.post('/', async (req, res) => {
       },
     });
     res.status(201).json(category);
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'Category with this name already exists' });
+    }
     res.status(500).json({ error: 'Failed to create category' });
   }
 });

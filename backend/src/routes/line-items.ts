@@ -6,18 +6,52 @@ export const lineItemRoutes = Router();
 
 // Helper to parse metadata
 const parseMetadata = (item: any) => {
-  if (item.metadata && typeof item.metadata === 'string') {
+  if (!item) return item;
+  
+  // Create a copy to avoid mutating the original
+  const parsed = { ...item };
+  
+  if (parsed.metadata && typeof parsed.metadata === 'string') {
     try {
-      item.metadata = JSON.parse(item.metadata);
+      parsed.metadata = JSON.parse(parsed.metadata);
     } catch {
-      item.metadata = {};
+      parsed.metadata = {};
     }
   }
-  // Recursively parse sub-line items
-  if (item.subLineItems && Array.isArray(item.subLineItems)) {
-    item.subLineItems = item.subLineItems.map(parseMetadata);
+  
+  // Map main item relations (Prisma uses capitalized names)
+  if (parsed.Status) parsed.status = parsed.Status;
+  if (parsed.Category) parsed.category = parsed.Category;
+  // Tag is always an array from Prisma
+  if (parsed.Tag) {
+    parsed.tags = Array.isArray(parsed.Tag) ? parsed.Tag : (parsed.Tag ? [parsed.Tag] : []);
+  } else {
+    parsed.tags = [];
   }
-  return item;
+  
+  // Handle sub-line items (Prisma uses other_LineItem)
+  if (parsed.other_LineItem && Array.isArray(parsed.other_LineItem)) {
+    parsed.subLineItems = parsed.other_LineItem.map((subItem: any) => {
+      const parsedSub = parseMetadata(subItem);
+      // Map sub-item relations
+      if (parsedSub.Status) parsedSub.status = parsedSub.Status;
+      if (parsedSub.Category) parsedSub.category = parsedSub.Category;
+      // Tag is always an array from Prisma
+      if (parsedSub.Tag) {
+        parsedSub.tags = Array.isArray(parsedSub.Tag) ? parsedSub.Tag : (parsedSub.Tag ? [parsedSub.Tag] : []);
+      } else {
+        parsedSub.tags = [];
+      }
+      return parsedSub;
+    });
+  } else if (parsed.subLineItems && Array.isArray(parsed.subLineItems)) {
+    // Fallback: if subLineItems already exists, parse it recursively
+    parsed.subLineItems = parsed.subLineItems.map(parseMetadata);
+  } else {
+    parsed.subLineItems = [];
+  }
+  
+  return parsed;
 };
 
 // Helper to recalculate parent totals from sub-line items
@@ -66,14 +100,14 @@ lineItemRoutes.get('/event/:eventId', async (req, res) => {
         parentLineItemId: null, // Only get top-level items
       },
       include: {
-        status: true,
-        category: true,
-        tags: true,
-        subLineItems: {
+        Status: true,
+        Category: true,
+        Tag: true,
+        other_LineItem: {
           include: {
-            status: true,
-            category: true,
-            tags: true,
+            Status: true,
+            Category: true,
+            Tag: true,
           },
           orderBy: { createdAt: 'asc' },
         },
@@ -92,20 +126,20 @@ lineItemRoutes.get('/:id', async (req, res) => {
     const lineItem = await prisma.lineItem.findUnique({
       where: { id: req.params.id },
       include: {
-        status: true,
-        category: true,
-        tags: true,
-        parentLineItem: {
+        Status: true,
+        Category: true,
+        Tag: true,
+        LineItem: {
           include: {
-            status: true,
-            category: true,
+            Status: true,
+            Category: true,
           },
         },
-        subLineItems: {
+        other_LineItem: {
           include: {
-            status: true,
-            category: true,
-            tags: true,
+            Status: true,
+            Category: true,
+            Tag: true,
           },
           orderBy: { createdAt: 'asc' },
         },
@@ -142,23 +176,26 @@ lineItemRoutes.post('/', async (req, res) => {
     const totalPrice = quantity && unitPrice ? quantity * unitPrice : (plannedCost || null);
 
     // If no statusId provided, try to find default status, but allow null
+    // Statuses are now global (eventId is optional)
+    // Determine itemType: 'sub' if parentLineItemId exists, otherwise 'main'
+    const itemType = parentLineItemId ? 'sub' : 'main';
     let finalStatusId = statusId || null;
     if (!finalStatusId) {
       const defaultStatus = await prisma.status.findFirst({
         where: {
-          eventId,
           moduleType: moduleType as ModuleType,
+          itemType: itemType, // Use 'sub' for sub-line items, 'main' for main items
           isDefault: true,
         },
       });
       if (defaultStatus) {
         finalStatusId = defaultStatus.id;
       } else {
-        // If no default status, get the first status for this module
+        // If no default status, get the first status for this module and itemType
         const firstStatus = await prisma.status.findFirst({
           where: {
-            eventId,
             moduleType: moduleType as ModuleType,
+            itemType: itemType,
           },
           orderBy: { order: 'asc' },
         });
@@ -169,32 +206,38 @@ lineItemRoutes.post('/', async (req, res) => {
       }
     }
 
+    const createData: any = {
+      moduleType: moduleType as ModuleType,
+      eventId,
+      name,
+      description: description || null,
+      quantity: quantity || null,
+      unitPrice: unitPrice || null,
+      totalPrice: totalPrice || null,
+      plannedCost: plannedCost || null,
+      actualCost: actualCost || null,
+      statusId: finalStatusId || null,
+      categoryId: categoryId || null,
+      parentLineItemId: parentLineItemId || null,
+      metadata: metadata ? JSON.stringify(metadata) : null,
+    };
+    
+    // Only add Tag relation if tagIds are provided
+    if (tagIds && tagIds.length > 0) {
+      createData.Tag = { connect: tagIds.map((id: string) => ({ id })) };
+    }
+    
     const lineItem = await prisma.lineItem.create({
-      data: {
-        moduleType: moduleType as ModuleType,
-        eventId,
-        name,
-        description,
-        quantity,
-        unitPrice,
-        totalPrice,
-        plannedCost: plannedCost || null,
-        actualCost: actualCost || null,
-        statusId: finalStatusId || null,
-        categoryId: categoryId || null,
-        parentLineItemId: parentLineItemId || null,
-        metadata: metadata ? JSON.stringify(metadata) : null,
-        tags: tagIds ? { connect: tagIds.map((id: string) => ({ id })) } : undefined,
-      },
+      data: createData,
       include: {
-        status: true,
-        category: true,
-        tags: true,
-        subLineItems: {
+        Status: true,
+        Category: true,
+        Tag: true,
+        other_LineItem: {
           include: {
-            status: true,
-            category: true,
-            tags: true,
+            Status: true,
+            Category: true,
+            Tag: true,
           },
         },
       },
@@ -207,14 +250,24 @@ lineItemRoutes.post('/', async (req, res) => {
     }
 
     res.status(201).json(parseMetadata(lineItem));
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create line item' });
+  } catch (error: any) {
+    console.error('❌ Error creating line item:', error);
+    console.error('❌ Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+    });
+    res.status(500).json({ error: 'Failed to create line item', details: error?.message });
   }
 });
 
 // Update line item
 lineItemRoutes.put('/:id', async (req, res) => {
   try {
+    console.log('🔵 Update request received:', {
+      id: req.params.id,
+      body: req.body,
+    });
     const {
       name,
       description,
@@ -243,11 +296,12 @@ lineItemRoutes.put('/:id', async (req, res) => {
     if (actualCost !== undefined) updateData.actualCost = actualCost || null;
     if (statusId !== undefined) {
       // If statusId is empty string, find default status
+      // Statuses are now global (eventId is optional)
       if (!statusId) {
         const defaultStatus = await prisma.status.findFirst({
           where: {
-            eventId: current.eventId,
             moduleType: current.moduleType as ModuleType,
+            itemType: current.parentLineItemId ? 'sub' : 'main', // Determine itemType based on whether it's a sub-item
             isDefault: true,
           },
         });
@@ -256,16 +310,17 @@ lineItemRoutes.put('/:id', async (req, res) => {
         } else {
           const firstStatus = await prisma.status.findFirst({
             where: {
-              eventId: current.eventId,
               moduleType: current.moduleType as ModuleType,
+              itemType: current.parentLineItemId ? 'sub' : 'main',
             },
             orderBy: { order: 'asc' },
           });
           if (firstStatus) {
             updateData.statusId = firstStatus.id;
+          } else {
+            // If no status found, set to null (status is optional)
+            updateData.statusId = null;
           }
-          // If no status found, set to null (status is optional)
-          updateData.statusId = null;
         }
       } else {
         updateData.statusId = statusId;
@@ -288,7 +343,7 @@ lineItemRoutes.put('/:id', async (req, res) => {
       await prisma.lineItem.update({
         where: { id: req.params.id },
         data: {
-          tags: {
+          Tag: {
             set: tagIds.map((id: string) => ({ id })),
           },
         },
@@ -299,14 +354,14 @@ lineItemRoutes.put('/:id', async (req, res) => {
       where: { id: req.params.id },
       data: updateData,
       include: {
-        status: true,
-        category: true,
-        tags: true,
-        subLineItems: {
+        Status: true,
+        Category: true,
+        Tag: true,
+        other_LineItem: {
           include: {
-            status: true,
-            category: true,
-            tags: true,
+            Status: true,
+            Category: true,
+            Tag: true,
           },
         },
       },
@@ -318,9 +373,25 @@ lineItemRoutes.put('/:id', async (req, res) => {
       await recalculateParentTotals(current.parentLineItemId, true);
     }
 
-    res.json(parseMetadata(lineItem));
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update line item' });
+    const parsed = parseMetadata(lineItem);
+    console.log('🔵 Update successful, parsed response:', {
+      id: parsed.id,
+      name: parsed.name,
+      hasStatus: !!parsed.status,
+      hasCategory: !!parsed.category,
+      tagsLength: parsed.tags?.length || 0,
+      subLineItemsLength: parsed.subLineItems?.length || 0,
+    });
+    res.json(parsed);
+  } catch (error: any) {
+    console.error('❌ Error updating line item:', error);
+    console.error('❌ Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+      stack: error?.stack?.split('\n').slice(0, 5),
+    });
+    res.status(500).json({ error: 'Failed to update line item', details: error?.message });
   }
 });
 
@@ -329,7 +400,7 @@ lineItemRoutes.delete('/:id', async (req, res) => {
   try {
     const lineItem = await prisma.lineItem.findUnique({
       where: { id: req.params.id },
-      include: { subLineItems: true },
+      include: { other_LineItem: true },
     });
 
     if (!lineItem) {
@@ -337,7 +408,7 @@ lineItemRoutes.delete('/:id', async (req, res) => {
     }
 
     // Delete sub-line items first (cascade should handle this, but being explicit)
-    if (lineItem.subLineItems.length > 0) {
+    if (lineItem.other_LineItem.length > 0) {
       await prisma.lineItem.deleteMany({
         where: { parentLineItemId: req.params.id },
       });

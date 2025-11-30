@@ -18,7 +18,7 @@ export function Layout({ children }: LayoutProps) {
   const navigation = [
     { name: 'Events', href: '/events', icon: Calendar },
     { name: 'Finance Board', href: eventId ? `/events/${eventId}/finance` : '#', icon: DollarSign, disabled: !eventId },
-    { name: 'Manage Metadata', href: eventId ? `/events/${eventId}/manage-metadata` : '#', icon: Settings, disabled: !eventId },
+    { name: 'Manage Metadata', href: '/manage-metadata', icon: Settings },
   ];
 
   return (

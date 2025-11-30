@@ -31,23 +31,39 @@ moduleRoutes.get('/:eventId/:moduleType', async (req, res) => {
         parentLineItemId: null, // Only get top-level items
       },
       include: {
-        status: true,
-        category: true,
-        tags: true,
-        subLineItems: {
+        Status: true,
+        Category: true,
+        Tag: true,
+        other_LineItem: {
           include: {
-            status: true,
-            category: true,
-            tags: true,
+            Status: true,
+            Category: true,
+            Tag: true,
           },
           orderBy: { createdAt: 'asc' },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
-    res.json(lineItems.map(parseMetadata));
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch module line items' });
+    
+    // Map the data to match expected format (subLineItems instead of other_LineItem)
+    const mappedItems = lineItems.map(item => ({
+      ...item,
+      status: item.Status,
+      category: item.Category,
+      tags: item.Tag,
+      subLineItems: item.other_LineItem.map(subItem => ({
+        ...subItem,
+        status: subItem.Status,
+        category: subItem.Category,
+        tags: subItem.Tag,
+      })),
+    }));
+    
+    res.json(mappedItems.map(parseMetadata));
+  } catch (error: any) {
+    console.error('Error fetching module line items:', error);
+    res.status(500).json({ error: 'Failed to fetch module line items', details: error?.message });
   }
 });
 
