@@ -57,9 +57,9 @@ export function StatusDropdown({
   };
 
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-xs px-2 py-1',
-    lg: 'text-sm px-3 py-1.5',
+    sm: 'text-xs px-3 py-0.5 min-w-[80px]',
+    md: 'text-xs px-3 py-1 min-w-[100px]',
+    lg: 'text-sm px-4 py-1.5 min-w-[120px]',
   };
 
   const currentStatusColor = currentStatus ? getStatusColor(currentStatus.id) : '#9CA3AF';
@@ -70,7 +70,7 @@ export function StatusDropdown({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled || isUpdating}
-        className={`inline-flex items-center gap-1.5 rounded-full text-white font-medium transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+        className={`inline-flex items-center justify-center gap-1.5 rounded-full text-white font-medium transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-1 whitespace-nowrap ${
           sizeClasses[size]
         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${
           isUpdating ? 'opacity-70' : ''

@@ -170,11 +170,18 @@ export function InlineTextInput({
       type="button"
       onClick={handleClick}
       disabled={disabled}
-      className={`text-sm font-medium hover:bg-gray-100 px-2 py-1 rounded transition-colors ${
+      className={`text-sm font-medium hover:bg-gray-100 px-2 py-1 rounded transition-colors w-full text-left ${
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
       } ${isEmpty ? 'text-gray-400 italic' : 'text-gray-900'} ${className}`}
+      title={isEmpty ? `Click to ${placeholder.toLowerCase()}` : 'Click to edit'}
     >
-      {displayValue}
+      {isEmpty ? (
+        <span className="flex items-center gap-1">
+          <span>{displayValue}</span>
+        </span>
+      ) : (
+        <span className="whitespace-pre-wrap break-words">{displayValue}</span>
+      )}
     </button>
   );
 }

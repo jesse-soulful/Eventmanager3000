@@ -124,6 +124,12 @@ export function InlineAmountInput({
     );
   }
 
+  const displayValue = value !== null && value !== undefined 
+    ? prefix === '$' 
+      ? formatCurrency(value)
+      : `${prefix}${formatNumber(value)}`
+    : null;
+
   return (
     <button
       type="button"
@@ -131,13 +137,12 @@ export function InlineAmountInput({
       disabled={disabled}
       className={`text-sm font-semibold hover:bg-gray-100 px-2 py-1 rounded transition-colors ${
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-      } ${colorClasses[color]} ${className}`}
+      } ${displayValue ? colorClasses[color] : 'text-gray-400'} ${className}`}
+      title={displayValue ? `Click to edit: ${displayValue}` : `Click to add ${placeholder}`}
     >
-      {value !== null && value !== undefined 
-        ? prefix === '$' 
-          ? formatCurrency(value)
-          : `${prefix}${formatNumber(value)}`
-        : '-'}
+      {displayValue || (
+        <span className="italic text-gray-400">{placeholder}</span>
+      )}
     </button>
   );
 }

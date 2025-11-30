@@ -10,6 +10,7 @@ import { StatusDropdown } from '../components/StatusDropdown';
 import { InlineAmountInput } from '../components/InlineAmountInput';
 import { InlineTextInput } from '../components/InlineTextInput';
 import { CommentsModal } from '../components/CommentsModal';
+import { FileAttachmentsButton } from '../components/FileAttachmentsButton';
 import { formatCurrency } from '../lib/utils';
 
 export function ArtistsPage() {
@@ -633,35 +634,48 @@ export function ArtistsPage() {
                               size="sm"
                             />
                           </div>
-                          <div className="mb-2">
-                            <InlineTextInput
-                              value={subItem.description}
-                              onSave={(value) => handleDescriptionChange(subItem.id, value)}
-                              placeholder="Add description..."
-                              multiline
-                              className="text-xs text-gray-600"
-                            />
-                          </div>
-                          <div className="flex items-center gap-4 mt-2">
-                            <div>
-                              <span className="text-xs text-gray-500">Planned: </span>
+                          <div className="flex items-center gap-6 mt-2 mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-gray-600 flex-shrink-0">Planned:</span>
                               <InlineAmountInput
                                 value={subItem.plannedCost || null}
                                 onSave={(value) => handlePlannedCostChange(subItem.id, value)}
+                                placeholder="0.00"
                                 color="gray"
+                                className="min-w-[80px]"
                               />
                             </div>
-                            <div>
-                              <span className="text-xs text-gray-500">Actual: </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-gray-600 flex-shrink-0">Actual:</span>
                               <InlineAmountInput
                                 value={subItem.actualCost || null}
                                 onSave={(value) => handleActualCostChange(subItem.id, value)}
+                                placeholder="0.00"
                                 color="gray"
+                                className="min-w-[80px]"
                               />
                             </div>
                           </div>
+                          <div className="mb-2">
+                            <div className="flex items-start gap-2">
+                              <span className="text-xs text-gray-500 mt-1.5 flex-shrink-0">Notes:</span>
+                              <div className="flex-1 min-w-0">
+                                <InlineTextInput
+                                  value={subItem.description}
+                                  onSave={(value) => handleDescriptionChange(subItem.id, value)}
+                                  placeholder="Click to add notes..."
+                                  multiline
+                                  className="text-xs text-gray-600 w-full"
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3 ml-4 flex-shrink-0">
+                        <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                          <FileAttachmentsButton
+                            lineItemId={subItem.id}
+                            onUpdate={loadData}
+                          />
                           <button
                             onClick={() => {
                               setCommentsLineItemId(subItem.id);

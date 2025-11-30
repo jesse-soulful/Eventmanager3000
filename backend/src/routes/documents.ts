@@ -135,14 +135,64 @@ documentRoutes.delete('/line-item/:lineItemId/:documentIndex', async (req, res) 
 });
 
 // Serve uploaded files
-documentRoutes.get('/file/:filename', (req, res) => {
+documentRoutes.get('/file/:filename', async (req, res) => {
   try {
     const filePath = path.join(process.cwd(), 'uploads', req.params.filename);
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'File not found' });
     }
+
+    // Get file metadata to determine Content-Type
+    let contentType = 'application/octet-stream'; // Default binary
+    let originalName = req.params.filename;
+
+    try {
+      const lineItem = await prisma.lineItem.findFirst({
+        where: {
+          metadata: {
+            contains: req.params.filename,
+          },
+        },
+      });
+
+      if (lineItem && lineItem.metadata) {
+        const metadata = JSON.parse(lineItem.metadata as string);
+        const documents = metadata.documents || [];
+        const document = documents.find((doc: any) => doc.filename === req.params.filename);
+        if (document) {
+          if (document.mimetype) {
+            contentType = document.mimetype;
+          }
+          if (document.name) {
+            originalName = document.name;
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing metadata:', e);
+    }
+
+    // Fallback to extension-based detection if metadata not found
+    if (contentType === 'application/octet-stream') {
+      const ext = path.extname(req.params.filename).toLowerCase();
+      const mimeTypes: Record<string, string> = {
+        '.pdf': 'application/pdf',
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+      };
+      contentType = mimeTypes[ext] || contentType;
+    }
+
+    // Set headers for proper display (inline) instead of download
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(originalName)}"`);
+    
     res.sendFile(path.resolve(filePath));
   } catch (error) {
+    console.error('Error serving file:', error);
     res.status(500).json({ error: 'Failed to serve file' });
   }
 });
