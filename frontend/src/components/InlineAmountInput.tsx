@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
+import { formatCurrency, formatNumber } from '../lib/utils';
 
 interface InlineAmountInputProps {
   value: number | null | undefined;
@@ -132,7 +133,11 @@ export function InlineAmountInput({
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
       } ${colorClasses[color]} ${className}`}
     >
-      {value !== null && value !== undefined ? `${prefix}${value.toFixed(2)}` : '-'}
+      {value !== null && value !== undefined 
+        ? prefix === '$' 
+          ? formatCurrency(value)
+          : `${prefix}${formatNumber(value)}`
+        : '-'}
     </button>
   );
 }

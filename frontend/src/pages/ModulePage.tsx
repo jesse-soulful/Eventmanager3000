@@ -7,6 +7,7 @@ import { MODULE_DISPLAY_NAMES } from '@event-management/shared';
 import { LineItemModal } from '../components/LineItemModal';
 import { StatusDropdown } from '../components/StatusDropdown';
 import { InlineAmountInput } from '../components/InlineAmountInput';
+import { formatCurrency } from '../lib/utils';
 
 export function ModulePage() {
   const { eventId, moduleType } = useParams<{ eventId: string; moduleType: string }>();
@@ -219,10 +220,10 @@ export function ModulePage() {
                       {item.quantity ?? '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.unitPrice ? `$${item.unitPrice.toFixed(2)}` : '-'}
+                      {item.unitPrice ? formatCurrency(item.unitPrice) : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {item.totalPrice ? `$${item.totalPrice.toFixed(2)}` : '-'}
+                      {item.totalPrice ? formatCurrency(item.totalPrice) : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button

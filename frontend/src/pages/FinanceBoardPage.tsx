@@ -5,6 +5,7 @@ import { financeApi } from '../lib/api';
 import type { FinanceSummary, FinanceLineItem } from '@event-management/shared';
 import { MODULE_COLORS } from '@event-management/shared';
 import { format } from 'date-fns';
+import { formatCurrency } from '../lib/utils';
 
 export function FinanceBoardPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -106,7 +107,7 @@ export function FinanceBoardPage() {
                 <div>
                   <p className="text-sm font-semibold text-red-700 uppercase tracking-wide">Total Spent</p>
                   <p className="text-3xl font-bold text-red-900 mt-2">
-                    ${summary.totalSpent.toFixed(2)}
+                    {formatCurrency(summary.totalSpent)}
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-red-500 flex items-center justify-center shadow-lg">
@@ -119,7 +120,7 @@ export function FinanceBoardPage() {
                 <div>
                   <p className="text-sm font-semibold text-yellow-700 uppercase tracking-wide">Committed</p>
                   <p className="text-3xl font-bold text-yellow-900 mt-2">
-                    ${summary.totalCommitted.toFixed(2)}
+                    {formatCurrency(summary.totalCommitted)}
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-yellow-500 flex items-center justify-center shadow-lg">
@@ -140,7 +141,7 @@ export function FinanceBoardPage() {
                   <p className={`text-3xl font-bold mt-2 ${
                     summary.remaining >= 0 ? 'text-green-900' : 'text-red-900'
                   }`}>
-                    ${summary.remaining.toFixed(2)}
+                    {formatCurrency(summary.remaining)}
                   </p>
                 </div>
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
@@ -180,18 +181,18 @@ export function FinanceBoardPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                        ${module.budget.toFixed(2)}
+                        {formatCurrency(module.budget)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-red-600">
-                        ${module.spent.toFixed(2)}
+                        {formatCurrency(module.spent)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-yellow-600">
-                        ${module.committed.toFixed(2)}
+                        {formatCurrency(module.committed)}
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${
                         module.remaining >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        ${module.remaining.toFixed(2)}
+                        {formatCurrency(module.remaining)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
                         {module.lineItemCount}
@@ -211,7 +212,7 @@ export function FinanceBoardPage() {
                 {summary.byCategory.map((cat) => (
                   <div key={cat.categoryId} className="border border-gray-200 rounded-lg p-4">
                     <h3 className="font-medium text-gray-900">{cat.categoryName}</h3>
-                    <p className="text-2xl font-bold text-gray-900 mt-2">${cat.amount.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">{formatCurrency(cat.amount)}</p>
                     <p className="text-sm text-gray-500 mt-1">{cat.lineItemCount} items</p>
                   </div>
                 ))}
@@ -249,7 +250,7 @@ export function FinanceBoardPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.categoryName || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.statusName}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                      ${item.totalPrice.toFixed(2)}
+                      {formatCurrency(item.totalPrice)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {format(new Date(item.date), 'MMM d, yyyy')}

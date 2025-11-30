@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatCurrency, formatNumber } from '../lib/utils';
 import { lineItemsApi } from '../lib/api';
 import type { LineItem, Status, Category, Tag, ModuleType } from '@event-management/shared';
 import { AlertTriangle } from 'lucide-react';
@@ -171,8 +172,8 @@ export function SubLineItemModal({
                     Planned Cost Exceeds Total Budget
                   </h3>
                   <p className="text-sm text-yellow-700 mb-3">
-                    The total planned cost of all sub-items (${totalSubItemsPlanned.toFixed(2)}) exceeds 
-                    the artist's total planned cost (${parentItem.plannedCost?.toFixed(2) || '0.00'}). 
+                    The total planned cost of all sub-items ({formatCurrency(totalSubItemsPlanned)}) exceeds 
+                    the artist's total planned cost ({formatCurrency(parentItem.plannedCost) || formatCurrency(0)}). 
                     Are you sure you want to continue?
                   </p>
                   <div className="flex gap-2">
@@ -205,7 +206,7 @@ export function SubLineItemModal({
               <div className="flex justify-between items-center mb-1">
                 <span className="text-gray-600">Parent Total Planned Cost:</span>
                 <span className="font-semibold text-gray-900">
-                  ${parentItem.plannedCost?.toFixed(2) || '0.00'}
+                  {formatCurrency(parentItem.plannedCost) || formatCurrency(0)}
                 </span>
               </div>
               {formData.plannedCost && (
@@ -216,7 +217,7 @@ export function SubLineItemModal({
                       ? 'text-red-600'
                       : 'text-gray-900'
                   }`}>
-                    ${parseFloat(formData.plannedCost).toFixed(2)}
+                    {formatCurrency(parseFloat(formData.plannedCost))}
                   </span>
                 </div>
               )}
