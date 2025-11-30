@@ -9,6 +9,7 @@ import { tagRoutes } from './routes/tags';
 import { financeRoutes } from './routes/finance';
 import { subLineItemTypeRoutes } from './routes/sub-line-item-types';
 import { documentRoutes } from './routes/documents';
+import { commentRoutes } from './routes/comments';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -32,6 +33,7 @@ app.use('/api/tags', tagRoutes);
 app.use('/api/finance', financeRoutes);
 app.use('/api/sub-line-item-types', subLineItemTypeRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/comments', commentRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);

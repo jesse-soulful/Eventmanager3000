@@ -21,6 +21,9 @@ import type {
   SubLineItemType,
   CreateSubLineItemTypeInput,
   UpdateSubLineItemTypeInput,
+  Comment,
+  CreateCommentInput,
+  UpdateCommentInput,
 } from '@event-management/shared';
 
 const api = axios.create({
@@ -105,6 +108,14 @@ export const subLineItemTypesApi = {
   create: (data: CreateSubLineItemTypeInput) => api.post<SubLineItemType>('/sub-line-item-types', data),
   update: (id: string, data: UpdateSubLineItemTypeInput) => api.put<SubLineItemType>(`/sub-line-item-types/${id}`, data),
   delete: (id: string) => api.delete(`/sub-line-item-types/${id}`),
+};
+
+// Comments
+export const commentsApi = {
+  getByLineItem: (lineItemId: string) => api.get<Comment[]>(`/comments/line-item/${lineItemId}`),
+  create: (data: CreateCommentInput) => api.post<Comment>('/comments', data),
+  update: (id: string, data: UpdateCommentInput) => api.put<Comment>(`/comments/${id}`, data),
+  delete: (id: string) => api.delete(`/comments/${id}`),
 };
 
 // Documents

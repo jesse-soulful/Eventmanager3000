@@ -67,6 +67,7 @@ model LineItem {
   other_LineItem   LineItem[] @relation("LineItemToLineItem")
   Event            Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
   Tag              Tag[]      @relation("LineItemTags")
+  Comment          Comment[]
 
   @@index([parentLineItemId])
   @@index([categoryId])
@@ -125,4 +126,16 @@ model Tag {
   @@unique([moduleType, name])
   @@index([eventId])
   @@index([moduleType])
+}
+
+model Comment {
+  id          String    @id @default(uuid())
+  lineItemId  String
+  content     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  LineItem   LineItem  @relation(fields: [lineItemId], references: [id], onDelete: Cascade)
+
+  @@index([lineItemId])
+  @@index([createdAt])
 }

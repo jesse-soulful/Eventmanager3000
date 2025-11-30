@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Plus, ArrowLeft, ChevronDown, ChevronRight, Edit2, Trash2 } from 'lucide-react';
-import { modulesApi, lineItemsApi, statusesApi, categoriesApi, tagsApi, subLineItemTypesApi } from '../lib/api';
+import { Plus, ArrowLeft, ChevronDown, ChevronRight, Edit2, Trash2, MessageSquare } from 'lucide-react';
+import { modulesApi, lineItemsApi, statusesApi, categoriesApi, tagsApi, subLineItemTypesApi, commentsApi } from '../lib/api';
 import type { LineItem, Status, Category, Tag, SubLineItemType, ModuleType } from '@event-management/shared';
 import { ModuleType as ModuleTypeEnum } from '@event-management/shared';
 import { ArtistLineItemModal } from '../components/ArtistLineItemModal';
 import { SubLineItemModal } from '../components/SubLineItemModal';
 import { StatusDropdown } from '../components/StatusDropdown';
 import { InlineAmountInput } from '../components/InlineAmountInput';
+import { CommentsModal } from '../components/CommentsModal';
 
 export function ArtistsPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -20,6 +21,10 @@ export function ArtistsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSubLineItemModal, setShowSubLineItemModal] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [commentsLineItemId, setCommentsLineItemId] = useState<string | null>(null);
+  const [commentsLineItemName, setCommentsLineItemName] = useState<string>('');
+  const [commentCounts, setCommentCounts] = useState<Map<string, number>>(new Map());
   const [editingItem, setEditingItem] = useState<LineItem | null>(null);
   const [parentItemId, setParentItemId] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -58,6 +63,9 @@ export function ArtistsPage() {
         subLineItemTypesData: typesRes.data,
         mainStatusesData: mainStatusesRes.data,
       });
+      
+      // Load comment counts for all sub-line items
+      await loadCommentCounts(itemsRes.data);
     } catch (error: any) {
       console.error('Failed to load data:', error);
       if (error.response) {
@@ -67,6 +75,44 @@ export function ArtistsPage() {
       setSubLineItemTypes([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCommentCounts = async (lineItems: LineItem[]) => {
+    try {
+      const subLineItemIds: string[] = [];
+      lineItems.forEach(artist => {
+        if (artist.subLineItems) {
+          artist.subLineItems.forEach(subItem => {
+            subLineItemIds.push(subItem.id);
+          });
+        }
+      });
+
+      if (subLineItemIds.length === 0) {
+        setCommentCounts(new Map());
+        return;
+      }
+
+      // Fetch comment counts for all sub-line items
+      const countPromises = subLineItemIds.map(async (id) => {
+        try {
+          const response = await commentsApi.getByLineItem(id);
+          return { id, count: response.data.length };
+        } catch (error) {
+          console.error(`Failed to load comments for ${id}:`, error);
+          return { id, count: 0 };
+        }
+      });
+
+      const counts = await Promise.all(countPromises);
+      const countMap = new Map<string, number>();
+      counts.forEach(({ id, count }) => {
+        countMap.set(id, count);
+      });
+      setCommentCounts(countMap);
+    } catch (error) {
+      console.error('Failed to load comment counts:', error);
     }
   };
 
@@ -364,19 +410,37 @@ export function ArtistsPage() {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => {
+                                    setCommentsLineItemId(subItem.id);
+                                    setCommentsLineItemName(subItem.name);
+                                    setShowCommentsModal(true);
+                                  }}
+                                  className="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
+                                  title="View comments"
+                                >
+                                  <MessageSquare className="w-5 h-5" />
+                                  {(commentCounts.get(subItem.id) || 0) > 0 && (
+                                    <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-xs font-bold text-white bg-primary-600 rounded-full">
+                                      {commentCounts.get(subItem.id)}
+                                    </span>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => {
                                     setEditingItem(subItem);
                                     setParentItemId(artist.id);
                                     setShowSubLineItemModal(true);
                                   }}
-                                  className="text-primary-600 hover:text-primary-800"
+                                  className="p-2 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-lg transition-all duration-200"
+                                  title="Edit sub-line item"
                                 >
-                                  <Edit2 className="w-4 h-4" />
+                                  <Edit2 className="w-5 h-5" />
                                 </button>
                                 <button
                                   onClick={() => handleDelete(subItem.id)}
-                                  className="text-red-600 hover:text-red-800"
+                                  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                  title="Delete sub-line item"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-5 h-5" />
                                 </button>
                               </div>
                             </div>
@@ -435,6 +499,23 @@ export function ArtistsPage() {
             setEditingItem(null);
             setParentItemId(null);
             loadData();
+          }}
+        />
+      )}
+
+      {/* Comments Modal */}
+      {showCommentsModal && commentsLineItemId && (
+        <CommentsModal
+          lineItemId={commentsLineItemId}
+          lineItemName={commentsLineItemName}
+          onClose={() => {
+            setShowCommentsModal(false);
+            setCommentsLineItemId(null);
+            setCommentsLineItemName('');
+          }}
+          onCommentChange={async () => {
+            // Reload comment counts when comments change
+            await loadData();
           }}
         />
       )}

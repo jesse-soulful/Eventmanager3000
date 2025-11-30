@@ -6,6 +6,7 @@ export * from './types/status';
 export type { StatusItemType } from './types/status';
 export * from './types/category';
 export * from './types/tag';
+export * from './types/comment';
 export * from './types/finance';
 
 // Module types
