@@ -9,6 +9,7 @@ import { SubLineItemModal } from '../components/SubLineItemModal';
 import { CategoryModal } from '../components/CategoryModal';
 import { StatusDropdown } from '../components/StatusDropdown';
 import { InlineAmountInput } from '../components/InlineAmountInput';
+import { InlineTextInput } from '../components/InlineTextInput';
 import { CommentsModal } from '../components/CommentsModal';
 import { FileAttachmentsButton } from '../components/FileAttachmentsButton';
 import { formatCurrency } from '../lib/utils';
@@ -304,6 +305,16 @@ export function ProductionPage() {
       loadData();
     } catch (error) {
       console.error('Failed to update actual cost:', error);
+      throw error;
+    }
+  };
+
+  const handleDescriptionChange = async (itemId: string, description: string) => {
+    try {
+      await lineItemsApi.update(itemId, { description: description || undefined });
+      loadData();
+    } catch (error) {
+      console.error('Failed to update description:', error);
       throw error;
     }
   };
@@ -839,22 +850,23 @@ export function ProductionPage() {
                                     )}
                                   </button>
                                   <button
-                                    onClick={() => {
-                                      setEditingItem(item);
-                                      setParentCategoryId(category.id);
-                                      setShowCreateItemModal(true);
-                                    }}
-                                    className="btn btn-secondary btn-sm"
-                                  >
-                                    <Edit2 className="w-4 h-4" />
-                                  </button>
-                                  <button
                                     onClick={() => handleDeleteSubItem(item.id)}
                                     className="btn btn-danger btn-sm"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
                                 </div>
+                              </div>
+                              
+                              {/* Description */}
+                              <div className="mb-2">
+                                <InlineTextInput
+                                  value={item.description || ''}
+                                  onSave={(value) => handleDescriptionChange(item.id, value)}
+                                  placeholder="Click to add description..."
+                                  multiline
+                                  className="text-sm text-gray-600 w-full"
+                                />
                               </div>
                               
                               {/* Sub-line Items */}
