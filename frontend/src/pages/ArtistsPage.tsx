@@ -543,58 +543,114 @@ export function ArtistsPage() {
             const plannedTotal = artist.plannedCost || 0;
             const actualTotal = artist.actualCost || 0;
             const variance = actualTotal - plannedTotal;
+            
+            // Count sub-item statuses
+            const subItemStatusCounts = new Map<string, { count: number; color: string }>();
+            subItems.forEach((subItem) => {
+              if (subItem.status) {
+                const statusId = subItem.status.id;
+                const status = subStatuses.find(s => s.id === statusId);
+                if (status) {
+                  const existing = subItemStatusCounts.get(statusId) || { count: 0, color: status.color };
+                  subItemStatusCounts.set(statusId, {
+                    count: existing.count + 1,
+                    color: status.color,
+                  });
+                }
+              }
+            });
 
             return (
               <div key={artist.id} className="card">
-                {/* Artist Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <button
-                        onClick={() => toggleExpand(artist.id)}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                      >
-                        {isExpanded ? (
-                          <ChevronDown className="w-5 h-5" />
-                        ) : (
-                          <ChevronRight className="w-5 h-5" />
-                        )}
-                      </button>
-                      <h3 className="text-xl font-bold text-gray-900">
-                        {(artist.metadata as any)?.artistName || artist.name}
-                      </h3>
-                      <StatusDropdown
-                        statuses={mainStatuses}
-                        currentStatus={artist.status || null}
-                        onStatusChange={(statusId) => handleStatusChange(artist.id, statusId)}
-                        size="sm"
-                      />
-                    </div>
-                    <div className="flex items-center gap-6 ml-8">
-                      <div>
-                        <span className="text-xs text-gray-500">Planned: </span>
-                        <InlineAmountInput
-                          value={plannedTotal}
-                          onSave={(value) => handlePlannedCostChange(artist.id, value)}
-                          color="gray"
-                        />
+                {/* Top Row: Artist Name + Budget Overview + Actions */}
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <button
+                      onClick={() => toggleExpand(artist.id)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="w-5 h-5" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5" />
+                      )}
+                    </button>
+                    <h3 className="text-xl font-bold text-gray-900 flex-shrink-0">
+                      {(artist.metadata as any)?.artistName || artist.name}
+                    </h3>
+                    <StatusDropdown
+                      statuses={mainStatuses}
+                      currentStatus={artist.status || null}
+                      onStatusChange={(statusId) => handleStatusChange(artist.id, statusId)}
+                      size="sm"
+                    />
+                    
+                    {/* Sub-item Status Summary */}
+                    {subItems.length > 0 && (
+                      <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                        <span className="text-xs text-gray-500">Sub-items:</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {Array.from(subItemStatusCounts.entries()).map(([statusId, { count, color }]) => {
+                            const status = subStatuses.find(s => s.id === statusId);
+                            return (
+                              <div
+                                key={statusId}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                                style={{ backgroundColor: color }}
+                                title={status?.name || 'Unknown'}
+                              >
+                                <span>{status?.name || 'Unknown'}</span>
+                                <span className="bg-white/20 px-1 rounded">{count}</span>
+                              </div>
+                            );
+                          })}
+                          {subItems.length === 0 && (
+                            <span className="text-xs text-gray-400">None</span>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-xs text-gray-500">Actual: </span>
-                        <InlineAmountInput
-                          value={actualTotal}
-                          onSave={(value) => handleActualCostChange(artist.id, value)}
-                          color="gray"
-                        />
+                    )}
+                    
+                    {/* Budget Overview - Compact */}
+                    <div className="flex items-center gap-4 ml-auto flex-shrink-0">
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">Planned</div>
+                        <div className="text-sm font-semibold text-gray-900">
+                          {plannedTotal !== null && plannedTotal !== undefined ? (
+                            <InlineAmountInput
+                              value={plannedTotal}
+                              onSave={(value) => handlePlannedCostChange(artist.id, value)}
+                              color="gray"
+                            />
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <span className={`text-xs font-semibold ${variance >= 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                          Variance: {variance >= 0 ? '+' : ''}{formatCurrency(variance)}
-                        </span>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">Actual</div>
+                        <div className="text-sm font-semibold text-gray-900">
+                          {actualTotal !== null && actualTotal !== undefined ? (
+                            <InlineAmountInput
+                              value={actualTotal}
+                              onSave={(value) => handleActualCostChange(artist.id, value)}
+                              color="gray"
+                            />
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">Variance</div>
+                        <div className={`text-sm font-semibold ${variance >= 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {variance >= 0 ? '+' : ''}{formatCurrency(variance)}
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  
+                  <div className="flex gap-2 flex-shrink-0">
                     <button
                       onClick={() => {
                         setEditingItem(artist);
@@ -613,53 +669,60 @@ export function ArtistsPage() {
                   </div>
                 </div>
 
-                {/* Sub-items */}
-                {isExpanded && subItems.length > 0 && (
-                  <div className="ml-8 mt-4 space-y-3">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Sub-items</h4>
-                    {subItems.map((subItem) => (
-                      <div key={subItem.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2">
-                            <InlineTextInput
-                              value={subItem.name}
-                              onSave={(value) => handleNameChange(subItem.id, value)}
-                              placeholder="Sub-item name"
-                              className="text-sm font-medium"
-                            />
-                            <StatusDropdown
-                              statuses={subStatuses}
-                              currentStatus={subItem.status || null}
-                              onStatusChange={(statusId) => handleStatusChange(subItem.id, statusId)}
-                              size="sm"
-                            />
-                          </div>
-                          <div className="flex items-center gap-6 mt-2 mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-medium text-gray-600 flex-shrink-0">Planned:</span>
-                              <InlineAmountInput
-                                value={subItem.plannedCost || null}
-                                onSave={(value) => handlePlannedCostChange(subItem.id, value)}
-                                placeholder="0.00"
-                                color="gray"
-                                className="min-w-[80px]"
+                {/* Bottom Section: Sub-items */}
+                {isExpanded && (
+                  <div className="border-t border-gray-200 pt-4">
+                    {subItems.length > 0 ? (
+                      <div className="space-y-2">
+                        {subItems.map((subItem) => {
+                          const subStatusColor = subItem.status ? 
+                            subStatuses.find(s => s.id === subItem.status?.id)?.color || '#9CA3AF' 
+                            : '#9CA3AF';
+                          return (
+                            <div key={subItem.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                              {/* Status Color Indicator */}
+                              <div 
+                                className="w-1 h-12 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: subStatusColor }}
                               />
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-medium text-gray-600 flex-shrink-0">Actual:</span>
-                              <InlineAmountInput
-                                value={subItem.actualCost || null}
-                                onSave={(value) => handleActualCostChange(subItem.id, value)}
-                                placeholder="0.00"
-                                color="gray"
-                                className="min-w-[80px]"
-                              />
-                            </div>
-                          </div>
-                          <div className="mb-2">
-                            <div className="flex items-start gap-2">
-                              <span className="text-xs text-gray-500 mt-1.5 flex-shrink-0">Notes:</span>
-                              <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 flex-shrink-0">
+                                <InlineTextInput
+                                  value={subItem.name}
+                                  onSave={(value) => handleNameChange(subItem.id, value)}
+                                  placeholder="Sub-item name"
+                                  className="text-sm font-medium"
+                                />
+                                <StatusDropdown
+                                  statuses={subStatuses}
+                                  currentStatus={subItem.status || null}
+                                  onStatusChange={(statusId) => handleStatusChange(subItem.id, statusId)}
+                                  size="sm"
+                                />
+                                <div className="flex items-center gap-3 text-xs">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-gray-500">Planned:</span>
+                                    <InlineAmountInput
+                                      value={subItem.plannedCost || null}
+                                      onSave={(value) => handlePlannedCostChange(subItem.id, value)}
+                                      placeholder="0.00"
+                                      color="gray"
+                                      className="min-w-[70px]"
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-gray-500">Actual:</span>
+                                    <InlineAmountInput
+                                      value={subItem.actualCost || null}
+                                      onSave={(value) => handleActualCostChange(subItem.id, value)}
+                                      placeholder="0.00"
+                                      color="gray"
+                                      className="min-w-[70px]"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                              {/* Notes - Middle Section */}
+                              <div className="flex-1 min-w-0 mx-4">
                                 <InlineTextInput
                                   value={subItem.description}
                                   onSave={(value) => handleDescriptionChange(subItem.id, value)}
@@ -668,40 +731,44 @@ export function ArtistsPage() {
                                   className="text-xs text-gray-600 w-full"
                                 />
                               </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <FileAttachmentsButton
+                                  lineItemId={subItem.id}
+                                  onUpdate={loadData}
+                                />
+                                <button
+                                  onClick={() => {
+                                    setCommentsLineItemId(subItem.id);
+                                    setCommentsLineItemName(subItem.name);
+                                    setShowCommentsModal(true);
+                                  }}
+                                  className="relative p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-primary-600 transition-colors"
+                                  title="View comments"
+                                >
+                                  <MessageSquare className="w-5 h-5" />
+                                  {(commentCounts.get(subItem.id) || 0) > 0 && (
+                                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-[20px] px-1 text-[11px] font-bold text-white bg-primary-600 rounded-full">
+                                      {commentCounts.get(subItem.id)}
+                                    </span>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(subItem.id)}
+                                  className="p-2 rounded-full text-red-600 hover:bg-gray-200 hover:text-red-800 transition-colors"
+                                  title="Delete sub-item"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-                          <FileAttachmentsButton
-                            lineItemId={subItem.id}
-                            onUpdate={loadData}
-                          />
-                          <button
-                            onClick={() => {
-                              setCommentsLineItemId(subItem.id);
-                              setCommentsLineItemName(subItem.name);
-                              setShowCommentsModal(true);
-                            }}
-                            className="relative p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-primary-600 transition-colors"
-                            title="View comments"
-                          >
-                            <MessageSquare className="w-5 h-5" />
-                            {(commentCounts.get(subItem.id) || 0) > 0 && (
-                              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-[20px] px-1 text-[11px] font-bold text-white bg-primary-600 rounded-full">
-                                {commentCounts.get(subItem.id)}
-                              </span>
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleDelete(subItem.id)}
-                            className="p-2 rounded-full text-red-600 hover:bg-gray-200 hover:text-red-800 transition-colors"
-                            title="Delete sub-item"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
+                          );
+                        })}
                       </div>
-                    ))}
+                    ) : (
+                      <div className="text-center py-8 text-gray-500 text-sm">
+                        No sub-items yet. Add sub-items when editing this artist.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
