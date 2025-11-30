@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { formatCurrency, formatNumber } from '../lib/utils';
-import { lineItemsApi } from '../lib/api';
-import type { LineItem, Status, Category, Tag, ModuleType } from '@event-management/shared';
+import { lineItemsApi, modulesApi } from '../lib/api';
+import type { LineItem, Status, Category, Tag, SubLineItemType, ModuleType } from '@event-management/shared';
 import { ModuleType as ModuleTypeEnum } from '@event-management/shared';
 import { AlertTriangle } from 'lucide-react';
+import { VendorSelector } from './VendorSelector';
+import { MaterialSelector } from './MaterialSelector';
 
 interface SubLineItemModalProps {
   eventId: string;
@@ -13,6 +15,7 @@ interface SubLineItemModalProps {
   statuses: Status[];
   categories: Category[];
   tags: Tag[];
+  subLineItemTypes?: SubLineItemType[];
   onClose: () => void;
   onSave: () => void;
 }
@@ -25,6 +28,7 @@ export function SubLineItemModal({
   statuses,
   categories,
   tags,
+  subLineItemTypes = [],
   onClose,
   onSave,
 }: SubLineItemModalProps) {
@@ -38,6 +42,9 @@ export function SubLineItemModal({
     tagIds: [] as string[],
     metadata: {} as Record<string, any>,
   });
+  const [itemType, setItemType] = useState<'rental' | 'owned' | ''>(''); // 'rental' = from vendor, 'owned' = from materials
+  const [selectedVendor, setSelectedVendor] = useState<{ id: string; name: string; description?: string } | null>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<{ id: string; name: string; description?: string } | null>(null);
   const [parentItem, setParentItem] = useState<LineItem | null>(null);
   const [showWarning, setShowWarning] = useState(false);
   const [pendingSubmit, setPendingSubmit] = useState(false);
@@ -64,6 +71,24 @@ export function SubLineItemModal({
   };
 
   useEffect(() => {
+    // Reset form when modal opens/closes or lineItem changes
+    if (!lineItem) {
+      // Reset to defaults when creating new
+      setFormData({
+        name: '',
+        description: '',
+        plannedCost: '',
+        actualCost: '',
+        statusId: statuses.find(s => s.isDefault)?.id || statuses[0]?.id || '',
+        categoryId: '',
+        tagIds: [],
+        metadata: {},
+      });
+      setItemType('');
+      setSelectedVendor(null);
+      setSelectedMaterial(null);
+    }
+
     // Fetch parent item to get total planned cost
     if (parentLineItemId) {
       lineItemsApi.getById(parentLineItemId).then((response) => {
@@ -72,6 +97,7 @@ export function SubLineItemModal({
     }
 
     if (lineItem) {
+      const metadata = (lineItem.metadata as Record<string, any>) || {};
       setFormData({
         name: lineItem.name,
         description: lineItem.description || '',
@@ -80,8 +106,72 @@ export function SubLineItemModal({
         statusId: lineItem.status?.id || '',
         categoryId: lineItem.category?.id || '',
         tagIds: lineItem.tags.map(t => t.id),
-        metadata: (lineItem.metadata as Record<string, any>) || {},
+        metadata: metadata,
       });
+      // Set item type and vendor/material from metadata
+      if (metadata.vendorId) {
+        setItemType('rental');
+        // Try to fetch vendor details, fallback to metadata
+        modulesApi.getGlobalModuleLineItems(ModuleTypeEnum.VENDORS_SUPPLIERS)
+          .then(response => {
+            const vendor = response.data.find((v: LineItem) => v.id === metadata.vendorId);
+            if (vendor) {
+              setSelectedVendor({
+                id: vendor.id,
+                name: vendor.name,
+                description: vendor.description || metadata.vendorDescription,
+              });
+            } else {
+              // Fallback to metadata
+              setSelectedVendor({ 
+                id: metadata.vendorId, 
+                name: metadata.vendorName || lineItem.name,
+                description: metadata.vendorDescription 
+              });
+            }
+          })
+          .catch(() => {
+            // Fallback to metadata if fetch fails
+            setSelectedVendor({ 
+              id: metadata.vendorId, 
+              name: metadata.vendorName || lineItem.name,
+              description: metadata.vendorDescription 
+            });
+          });
+      } else if (metadata.materialId) {
+        setItemType('owned');
+        // Try to fetch material details, fallback to metadata
+        modulesApi.getGlobalModuleLineItems(ModuleTypeEnum.MATERIALS_STOCK)
+          .then(response => {
+            const material = response.data.find((m: LineItem) => m.id === metadata.materialId);
+            if (material) {
+              setSelectedMaterial({
+                id: material.id,
+                name: material.name,
+                description: material.description || metadata.materialDescription,
+              });
+            } else {
+              // Fallback to metadata
+              setSelectedMaterial({ 
+                id: metadata.materialId, 
+                name: metadata.materialName || lineItem.name,
+                description: metadata.materialDescription 
+              });
+            }
+          })
+          .catch(() => {
+            // Fallback to metadata if fetch fails
+            setSelectedMaterial({ 
+              id: metadata.materialId, 
+              name: metadata.materialName || lineItem.name,
+              description: metadata.materialDescription 
+            });
+          });
+      } else {
+        setItemType('');
+        setSelectedVendor(null);
+        setSelectedMaterial(null);
+      }
     }
   }, [lineItem, statuses, parentLineItemId]);
 
@@ -109,6 +199,37 @@ export function SubLineItemModal({
     }
 
     try {
+      // Prepare metadata with vendor/material references
+      const metadata: Record<string, any> = { ...formData.metadata };
+      if (itemType === 'rental' && selectedVendor) {
+        metadata.vendorId = selectedVendor.id;
+        metadata.vendorName = selectedVendor.name;
+        metadata.vendorDescription = selectedVendor.description;
+        metadata.itemType = 'rental';
+        // Clear material references
+        delete metadata.materialId;
+        delete metadata.materialName;
+        delete metadata.materialDescription;
+      } else if (itemType === 'owned' && selectedMaterial) {
+        metadata.materialId = selectedMaterial.id;
+        metadata.materialName = selectedMaterial.name;
+        metadata.materialDescription = selectedMaterial.description;
+        metadata.itemType = 'owned';
+        // Clear vendor references
+        delete metadata.vendorId;
+        delete metadata.vendorName;
+        delete metadata.vendorDescription;
+      } else {
+        // Clear both if no type selected
+        delete metadata.vendorId;
+        delete metadata.vendorName;
+        delete metadata.vendorDescription;
+        delete metadata.materialId;
+        delete metadata.materialName;
+        delete metadata.materialDescription;
+        delete metadata.itemType;
+      }
+
       const data = {
         moduleType,
         eventId,
@@ -120,7 +241,7 @@ export function SubLineItemModal({
         statusId: moduleType !== ModuleTypeEnum.STAFF_POOL ? (formData.statusId || undefined) : undefined,
         categoryId: moduleType !== ModuleTypeEnum.STAFF_POOL ? (formData.categoryId || undefined) : undefined,
         tagIds: moduleType !== ModuleTypeEnum.STAFF_POOL ? formData.tagIds : [],
-        metadata: formData.metadata,
+        metadata: metadata,
       };
 
       if (lineItem) {
@@ -227,6 +348,157 @@ export function SubLineItemModal({
             </div>
           )}
 
+          {/* Quick Select from Default Types */}
+          {!lineItem && subLineItemTypes.length > 0 && (
+            <div>
+              <label className="label">Quick Select from Default Types</label>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {subLineItemTypes
+                  .filter(type => type.isDefault)
+                  .sort((a, b) => a.order - b.order)
+                  .map((type) => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          name: type.name,
+                          description: type.description || '',
+                        });
+                      }}
+                      className="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors text-left"
+                    >
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-gray-700">{type.name}</span>
+                        {type.description && (
+                          <p className="text-xs text-gray-500 mt-1">{type.description}</p>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Item Type Selection (only for Production module) */}
+          {moduleType === ModuleTypeEnum.PRODUCTION && (
+            <div>
+              <label className="label">Item Type</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="itemType"
+                    value="rental"
+                    checked={itemType === 'rental'}
+                    onChange={(e) => {
+                      setItemType('rental');
+                      setSelectedMaterial(null);
+                      if (!selectedVendor && formData.name) {
+                        setFormData({ ...formData, name: '' });
+                      }
+                    }}
+                    className="w-4 h-4 text-primary-600"
+                  />
+                  <span>Rental (from Vendor/Supplier)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="itemType"
+                    value="owned"
+                    checked={itemType === 'owned'}
+                    onChange={(e) => {
+                      setItemType('owned');
+                      setSelectedVendor(null);
+                      if (!selectedMaterial && formData.name) {
+                        setFormData({ ...formData, name: '' });
+                      }
+                    }}
+                    className="w-4 h-4 text-primary-600"
+                  />
+                  <span>Owned (from Materials & Stock)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="itemType"
+                    value=""
+                    checked={itemType === ''}
+                    onChange={(e) => {
+                      setItemType('');
+                      setSelectedVendor(null);
+                      setSelectedMaterial(null);
+                    }}
+                    className="w-4 h-4 text-primary-600"
+                  />
+                  <span>None (Custom Item)</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Vendor Selector (for rentals) */}
+          {moduleType === ModuleTypeEnum.PRODUCTION && itemType === 'rental' && (
+            <div>
+              <VendorSelector
+                label="Select Vendor/Supplier"
+                value={selectedVendor}
+                onSelect={(vendor) => {
+                  setSelectedVendor(vendor);
+                  if (vendor) {
+                    setFormData({ ...formData, name: vendor.name, description: vendor.description || formData.description });
+                  }
+                }}
+                onCreateNew={async (name, description) => {
+                  const response = await lineItemsApi.create({
+                    moduleType: ModuleTypeEnum.VENDORS_SUPPLIERS,
+                    eventId: eventId,
+                    name,
+                    description: description || '',
+                  });
+                  return {
+                    id: response.data.id,
+                    name: response.data.name,
+                    description: response.data.description,
+                  };
+                }}
+                placeholder="Search vendors..."
+              />
+            </div>
+          )}
+
+          {/* Material Selector (for owned items) */}
+          {moduleType === ModuleTypeEnum.PRODUCTION && itemType === 'owned' && (
+            <div>
+              <MaterialSelector
+                label="Select Material/Stock"
+                value={selectedMaterial}
+                onSelect={(material) => {
+                  setSelectedMaterial(material);
+                  if (material) {
+                    setFormData({ ...formData, name: material.name, description: material.description || formData.description });
+                  }
+                }}
+                onCreateNew={async (name, description) => {
+                  const response = await lineItemsApi.create({
+                    moduleType: ModuleTypeEnum.MATERIALS_STOCK,
+                    eventId: eventId,
+                    name,
+                    description: description || '',
+                  });
+                  return {
+                    id: response.data.id,
+                    name: response.data.name,
+                    description: response.data.description,
+                  };
+                }}
+                placeholder="Search materials..."
+              />
+            </div>
+          )}
+
           <div>
             <label className="label">Name *</label>
             <input
@@ -236,6 +508,9 @@ export function SubLineItemModal({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
+            {(itemType === 'rental' && selectedVendor) || (itemType === 'owned' && selectedMaterial) ? (
+              <p className="text-xs mt-1 text-gray-500">Name is auto-filled from selection. You can edit if needed.</p>
+            ) : null}
           </div>
           <div>
             <label className="label">{moduleType === ModuleTypeEnum.STAFF_POOL ? 'Notes' : 'Description'}</label>

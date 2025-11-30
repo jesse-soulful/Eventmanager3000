@@ -8,16 +8,17 @@ datasource db {
 }
 
 model Category {
-  id          String     @id
-  moduleType  String
-  name        String
-  description String?
-  color       String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime
-  eventId     String?
-  Event       Event?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  LineItem    LineItem[]
+  id              String           @id @default(uuid())
+  moduleType      String
+  name            String
+  description     String?
+  color           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  eventId         String?
+  Event           Event?           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  LineItem        LineItem[]
+  SubLineItemType SubLineItemType[]
 
   @@unique([moduleType, name])
   @@index([eventId])
@@ -91,7 +92,7 @@ model LineItem {
 }
 
 model Status {
-  id         String     @id
+  id         String     @id @default(uuid())
   moduleType String
   name       String
   color      String     @default("#6B7280")
@@ -99,7 +100,7 @@ model Status {
   isDefault  Boolean    @default(false)
   itemType   String     @default("main")
   createdAt  DateTime   @default(now())
-  updatedAt  DateTime
+  updatedAt  DateTime   @updatedAt
   eventId    String?
   LineItem   LineItem[]
   Event      Event?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -110,29 +111,32 @@ model Status {
 }
 
 model SubLineItemType {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   moduleType  String
   eventId     String?
+  categoryId  String?
   name        String
   description String?
-  isDefault   Boolean  @default(false)
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  event       Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  isDefault   Boolean   @default(false)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  event       Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  @@unique([moduleType, name])
+  @@unique([moduleType, categoryId, name])
   @@index([eventId])
   @@index([moduleType])
+  @@index([categoryId])
 }
 
 model Tag {
-  id         String     @id
+  id         String     @id @default(uuid())
   moduleType String
   name       String
   color      String?
   createdAt  DateTime   @default(now())
-  updatedAt  DateTime
+  updatedAt  DateTime   @updatedAt
   eventId    String?
   Event      Event?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
   LineItem   LineItem[] @relation("LineItemTags")

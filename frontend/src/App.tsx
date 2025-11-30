@@ -6,6 +6,7 @@ import { ModulePage } from './pages/ModulePage';
 import { GlobalModulePage } from './pages/GlobalModulePage';
 import { StaffPoolPage } from './pages/StaffPoolPage';
 import { ArtistsPage } from './pages/ArtistsPage';
+import { ProductionPage } from './pages/ProductionPage';
 import { FinanceBoardPage } from './pages/FinanceBoardPage';
 import { ManageMetadataPage } from './pages/ManageMetadataPage';
 
@@ -18,6 +19,7 @@ function App() {
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:eventId" element={<EventDetailPage />} />
           <Route path="/events/:eventId/artists" element={<ArtistsPage />} />
+          <Route path="/events/:eventId/production" element={<ProductionPage />} />
           <Route path="/events/:eventId/:moduleType" element={<ModulePage />} />
           <Route path="/events/:eventId/finance" element={<FinanceBoardPage />} />
           <Route path="/finance" element={<FinanceBoardPage />} />

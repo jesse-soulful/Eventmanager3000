@@ -78,6 +78,7 @@ export interface SubLineItemType {
   id: string;
   moduleType: string;
   eventId?: string | null; // Optional - null means global metadata
+  categoryId?: string | null; // Optional - null means global, otherwise category-specific
   name: string;
   description?: string;
   isDefault: boolean;
@@ -89,6 +90,7 @@ export interface SubLineItemType {
 export interface CreateSubLineItemTypeInput {
   moduleType: string;
   eventId?: string; // Optional - null/undefined means global metadata
+  categoryId?: string; // Optional - null/undefined means global, otherwise category-specific
   name: string;
   description?: string;
   isDefault?: boolean;

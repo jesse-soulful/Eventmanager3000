@@ -158,8 +158,10 @@ export const financeApi = {
 
 // Sub-Line Item Types (global metadata - no eventId required)
 export const subLineItemTypesApi = {
-  getByModule: (moduleType: ModuleType) =>
-    api.get<SubLineItemType[]>(`/sub-line-item-types/${moduleType}`),
+  getByModule: (moduleType: ModuleType, categoryId?: string) => {
+    const params = categoryId ? `?categoryId=${categoryId}` : '';
+    return api.get<SubLineItemType[]>(`/sub-line-item-types/${moduleType}${params}`);
+  },
   create: (data: CreateSubLineItemTypeInput) => api.post<SubLineItemType>('/sub-line-item-types', data),
   update: (id: string, data: UpdateSubLineItemTypeInput) => api.put<SubLineItemType>(`/sub-line-item-types/${id}`, data),
   delete: (id: string) => api.delete(`/sub-line-item-types/${id}`),

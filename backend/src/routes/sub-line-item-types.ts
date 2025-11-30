@@ -5,16 +5,28 @@ import { ModuleType } from '@event-management/shared';
 export const subLineItemTypeRoutes = Router();
 
 // Get sub-line item types for a module type (global metadata)
+// Optional query param: categoryId to filter by category
 // Returns both global (eventId IS NULL) and event-specific ones for backward compatibility
 subLineItemTypeRoutes.get('/:moduleType', async (req, res) => {
   try {
     const moduleTypeParam = req.params.moduleType.toUpperCase() as ModuleType;
-    console.log('🔍 Fetching sub-line item types for module:', moduleTypeParam);
+    const categoryId = req.query.categoryId as string | undefined;
+    console.log('🔍 Fetching sub-line item types for module:', moduleTypeParam, categoryId ? `category: ${categoryId}` : '');
+    
+    const where: any = {
+      moduleType: moduleTypeParam,
+    };
+    
+    // If categoryId is provided, show types for that category OR global types (categoryId IS NULL)
+    if (categoryId) {
+      where.OR = [
+        { categoryId: categoryId },
+        { categoryId: null },
+      ];
+    }
     
     const types = await prisma.subLineItemType.findMany({
-      where: {
-        moduleType: moduleTypeParam,
-      },
+      where,
       orderBy: [{ isDefault: 'desc' }, { order: 'asc' }, { name: 'asc' }],
     });
     
@@ -29,7 +41,7 @@ subLineItemTypeRoutes.get('/:moduleType', async (req, res) => {
 // Create sub-line item type
 subLineItemTypeRoutes.post('/', async (req, res) => {
   try {
-    const { eventId, moduleType, name, description, isDefault, order } = req.body;
+    const { eventId, categoryId, moduleType, name, description, isDefault, order } = req.body;
     
     // Metadata is now global - eventId is optional
     let validatedEventId: string | null = null;
@@ -43,22 +55,35 @@ subLineItemTypeRoutes.post('/', async (req, res) => {
       validatedEventId = eventId;
     }
     
-    // Check if sub-line item type already exists (global)
+    // Validate categoryId if provided
+    let validatedCategoryId: string | null = null;
+    if (categoryId) {
+      const category = await prisma.category.findUnique({
+        where: { id: categoryId },
+      });
+      if (!category) {
+        return res.status(404).json({ error: `Category with id ${categoryId} not found` });
+      }
+      validatedCategoryId = categoryId;
+    }
+    
+    // Check if sub-line item type already exists (for this category or globally)
     const existing = await prisma.subLineItemType.findFirst({
       where: {
-        eventId: null,
         moduleType: moduleType as ModuleType,
+        categoryId: validatedCategoryId,
         name,
       },
     });
     
     if (existing) {
-      return res.status(409).json({ error: 'Sub-line item type with this name already exists' });
+      return res.status(409).json({ error: 'Sub-line item type with this name already exists for this category' });
     }
     
     const type = await prisma.subLineItemType.create({
       data: {
         eventId: validatedEventId, // null for global metadata
+        categoryId: validatedCategoryId, // null for global, otherwise category-specific
         moduleType: moduleType as ModuleType,
         name,
         description,
@@ -82,12 +107,26 @@ subLineItemTypeRoutes.post('/', async (req, res) => {
 // Update sub-line item type
 subLineItemTypeRoutes.put('/:id', async (req, res) => {
   try {
-    const { name, description, isDefault, order } = req.body;
+    const { name, description, isDefault, order, categoryId } = req.body;
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (isDefault !== undefined) updateData.isDefault = isDefault;
     if (order !== undefined) updateData.order = order;
+    if (categoryId !== undefined) {
+      // Validate categoryId if provided
+      if (categoryId) {
+        const category = await prisma.category.findUnique({
+          where: { id: categoryId },
+        });
+        if (!category) {
+          return res.status(404).json({ error: `Category with id ${categoryId} not found` });
+        }
+        updateData.categoryId = categoryId;
+      } else {
+        updateData.categoryId = null;
+      }
+    }
 
     const type = await prisma.subLineItemType.update({
       where: { id: req.params.id },

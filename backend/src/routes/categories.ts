@@ -62,10 +62,24 @@ categoryRoutes.post('/', async (req, res) => {
     });
     res.status(201).json(category);
   } catch (error: any) {
+    console.error('Error creating category:', error);
+    console.error('Error details:', {
+      code: error?.code,
+      message: error?.message,
+      meta: error?.meta,
+      stack: error?.stack,
+    });
     if (error.code === 'P2002') {
-      return res.status(409).json({ error: 'Category with this name already exists' });
+      return res.status(409).json({ 
+        error: 'Category with this name already exists', 
+        details: error?.meta?.target || 'Unique constraint violation'
+      });
     }
-    res.status(500).json({ error: 'Failed to create category' });
+    res.status(500).json({ 
+      error: 'Failed to create category', 
+      details: error?.message || 'Unknown error',
+      code: error?.code,
+    });
   }
 });
 

@@ -9,6 +9,7 @@ interface LineItemModalProps {
   statuses: Status[];
   categories: Category[];
   tags: Tag[];
+  defaultCategoryId?: string;
   onClose: () => void;
   onSave: () => void;
 }
@@ -20,6 +21,7 @@ export function LineItemModal({
   statuses,
   categories,
   tags,
+  defaultCategoryId,
   onClose,
   onSave,
 }: LineItemModalProps) {
@@ -50,8 +52,14 @@ export function LineItemModal({
         tagIds: lineItem.tags.map(t => t.id),
         metadata: (lineItem.metadata as Record<string, any>) || {},
       });
+    } else if (defaultCategoryId) {
+      // Set default category when creating new item
+      setFormData(prev => ({
+        ...prev,
+        categoryId: defaultCategoryId,
+      }));
     }
-  }, [lineItem]);
+  }, [lineItem, defaultCategoryId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
