@@ -8,6 +8,7 @@ import { ArtistLineItemModal } from '../components/ArtistLineItemModal';
 import { SubLineItemModal } from '../components/SubLineItemModal';
 import { StatusDropdown } from '../components/StatusDropdown';
 import { InlineAmountInput } from '../components/InlineAmountInput';
+import { InlineTextInput } from '../components/InlineTextInput';
 import { CommentsModal } from '../components/CommentsModal';
 import { formatCurrency } from '../lib/utils';
 
@@ -144,6 +145,26 @@ export function ArtistsPage() {
       loadData();
     } catch (error) {
       console.error('Failed to update actual cost:', error);
+      throw error;
+    }
+  };
+
+  const handleNameChange = async (itemId: string, name: string) => {
+    try {
+      await lineItemsApi.update(itemId, { name });
+      loadData();
+    } catch (error) {
+      console.error('Failed to update name:', error);
+      throw error;
+    }
+  };
+
+  const handleDescriptionChange = async (itemId: string, description: string) => {
+    try {
+      await lineItemsApi.update(itemId, { description: description || undefined });
+      loadData();
+    } catch (error) {
+      console.error('Failed to update description:', error);
       throw error;
     }
   };
@@ -596,10 +617,15 @@ export function ArtistsPage() {
                   <div className="ml-8 mt-4 space-y-3">
                     <h4 className="text-sm font-semibold text-gray-700 mb-2">Sub-items</h4>
                     {subItems.map((subItem) => (
-                      <div key={subItem.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-gray-900">{subItem.name}</span>
+                      <div key={subItem.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-2">
+                            <InlineTextInput
+                              value={subItem.name}
+                              onSave={(value) => handleNameChange(subItem.id, value)}
+                              placeholder="Sub-item name"
+                              className="text-sm font-medium"
+                            />
                             <StatusDropdown
                               statuses={subStatuses}
                               currentStatus={subItem.status || null}
@@ -607,7 +633,16 @@ export function ArtistsPage() {
                               size="sm"
                             />
                           </div>
-                          <div className="flex items-center gap-4 mt-2 ml-0">
+                          <div className="mb-2">
+                            <InlineTextInput
+                              value={subItem.description}
+                              onSave={(value) => handleDescriptionChange(subItem.id, value)}
+                              placeholder="Add description..."
+                              multiline
+                              className="text-xs text-gray-600"
+                            />
+                          </div>
+                          <div className="flex items-center gap-4 mt-2">
                             <div>
                               <span className="text-xs text-gray-500">Planned: </span>
                               <InlineAmountInput
@@ -626,7 +661,7 @@ export function ArtistsPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 ml-4 flex-shrink-0">
                           <button
                             onClick={() => {
                               setCommentsLineItemId(subItem.id);
@@ -642,17 +677,6 @@ export function ArtistsPage() {
                                 {commentCounts.get(subItem.id)}
                               </span>
                             )}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingItem(subItem);
-                              setParentItemId(artist.id);
-                              setShowSubLineItemModal(true);
-                            }}
-                            className="p-2 rounded-full text-primary-600 hover:bg-gray-200 hover:text-primary-800 transition-colors"
-                            title="Edit sub-item"
-                          >
-                            <Edit2 className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => handleDelete(subItem.id)}
