@@ -39,8 +39,9 @@ statusRoutes.get('/:moduleType', async (req, res) => {
     });
     console.log(`📥 Returning ${statuses.length} global statuses for ${moduleType}${itemType ? `/${itemType}` : ''}`);
     res.json(statuses);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch statuses' });
+  } catch (error: any) {
+    console.error('Error fetching statuses:', error);
+    res.status(500).json({ error: 'Failed to fetch statuses', details: error?.message });
   }
 });
 

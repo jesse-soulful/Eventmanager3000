@@ -5,6 +5,17 @@ export interface Event {
   startDate: Date;
   endDate: Date;
   location?: string;
+  venueName?: string;
+  venueAddress?: string;
+  venueCapacity?: number;
+  promotorName?: string;
+  promotorPhone?: string;
+  artistLiaisonName?: string;
+  artistLiaisonPhone?: string;
+  technicalName?: string;
+  technicalPhone?: string;
+  runningOrder?: string;
+  bannerImageUrl?: string;
   status: EventStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -25,6 +36,17 @@ export interface CreateEventInput {
   startDate: Date;
   endDate: Date;
   location?: string;
+  venueName?: string;
+  venueAddress?: string;
+  venueCapacity?: number;
+  promotorName?: string;
+  promotorPhone?: string;
+  artistLiaisonName?: string;
+  artistLiaisonPhone?: string;
+  technicalName?: string;
+  technicalPhone?: string;
+  runningOrder?: string;
+  bannerImageUrl?: string;
 }
 
 export interface UpdateEventInput {
@@ -33,6 +55,16 @@ export interface UpdateEventInput {
   startDate?: Date;
   endDate?: Date;
   location?: string;
+  venueName?: string;
+  venueAddress?: string;
+  venueCapacity?: number;
+  promotorName?: string;
+  promotorPhone?: string;
+  artistLiaisonName?: string;
+  artistLiaisonPhone?: string;
+  technicalName?: string;
+  technicalPhone?: string;
+  runningOrder?: string;
   status?: EventStatus;
 }
 

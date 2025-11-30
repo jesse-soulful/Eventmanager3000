@@ -2,19 +2,15 @@ import { useEffect, useState, useRef } from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { statusesApi, categoriesApi, tagsApi, subLineItemTypesApi } from '../lib/api';
 import type { Status, Category, Tag, SubLineItemType, ModuleType, StatusItemType } from '@event-management/shared';
-import { MODULE_DISPLAY_NAMES, ModuleType as ModuleTypeEnum } from '@event-management/shared';
+import { MODULE_DISPLAY_NAMES, ModuleType as ModuleTypeEnum, EVENT_SCOPED_MODULES, GLOBAL_MODULES } from '@event-management/shared';
 import { StatusModal } from '../components/StatusModal';
 import { CategoryModal } from '../components/CategoryModal';
 import { TagModal } from '../components/TagModal';
 import { SubLineItemTypeModal } from '../components/SubLineItemTypeModal';
 
 const MODULE_TYPES: ModuleType[] = [
-  ModuleTypeEnum.ARTISTS,
-  ModuleTypeEnum.VENDORS,
-  ModuleTypeEnum.MATERIALS,
-  ModuleTypeEnum.FOOD_BEVERAGE,
-  ModuleTypeEnum.SPONSORS,
-  ModuleTypeEnum.MARKETING,
+  ...EVENT_SCOPED_MODULES,
+  ...GLOBAL_MODULES,
 ];
 
 export function ManageMetadataPage() {

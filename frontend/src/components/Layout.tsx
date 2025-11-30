@@ -1,7 +1,9 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, DollarSign, Menu, Settings } from 'lucide-react';
+import { Calendar, DollarSign, Menu, Settings, Package, Users, Building2 } from 'lucide-react';
 import { useState } from 'react';
+import { GLOBAL_MODULES, MODULE_DISPLAY_NAMES, MODULE_COLORS } from '@event-management/shared';
+import type { ModuleType } from '@event-management/shared';
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,9 +17,26 @@ export function Layout({ children }: LayoutProps) {
     ? location.pathname.split('/')[2] 
     : null;
 
+  const globalModuleIcons: Record<ModuleType, typeof Package> = {
+    VENDORS_SUPPLIERS: Building2,
+    MATERIALS_STOCK: Package,
+    STAFF_POOL: Users,
+    // Event-scoped modules (not used in navigation)
+    ARTISTS: Calendar,
+    PRODUCTION: Calendar,
+    FOOD_BEVERAGE: Calendar,
+    COMMUNICATION_MARKETING: Calendar,
+    SPONSORS: Calendar,
+  };
+
   const navigation = [
     { name: 'Events', href: '/events', icon: Calendar },
-    { name: 'Finance Board', href: eventId ? `/events/${eventId}/finance` : '#', icon: DollarSign, disabled: !eventId },
+    ...GLOBAL_MODULES.map(moduleType => ({
+      name: MODULE_DISPLAY_NAMES[moduleType],
+      href: `/${moduleType.toLowerCase().replace(/_/g, '-')}`,
+      icon: globalModuleIcons[moduleType],
+    })),
+    { name: 'Finance Board', href: eventId ? `/events/${eventId}/finance` : '/finance', icon: DollarSign },
     { name: 'Manage Metadata', href: '/manage-metadata', icon: Settings },
   ];
 

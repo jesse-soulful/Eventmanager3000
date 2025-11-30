@@ -25,20 +25,31 @@ model Category {
 }
 
 model Event {
-  id              String            @id
-  name            String
-  description     String?
-  startDate       DateTime
-  endDate         DateTime
-  location        String?
-  status          String            @default("DRAFT")
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime
-  Category        Category[]
-  LineItem        LineItem[]
-  Status          Status[]
-  SubLineItemType SubLineItemType[]
-  Tag             Tag[]
+  id                  String            @id
+  name                String
+  description         String?
+  startDate           DateTime
+  endDate             DateTime
+  location            String?
+  venueName           String?
+  venueAddress        String?
+  venueCapacity       Int?
+  promotorName        String?
+  promotorPhone       String?
+  artistLiaisonName   String?
+  artistLiaisonPhone  String?
+  technicalName       String?
+  technicalPhone      String?
+  runningOrder        String?
+  bannerImageUrl      String?
+  status              String            @default("DRAFT")
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime
+  Category            Category[]
+  LineItem            LineItem[]
+  Status              Status[]
+  SubLineItemType     SubLineItemType[]
+  Tag                 Tag[]
 
   @@index([startDate])
   @@index([status])

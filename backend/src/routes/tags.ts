@@ -15,8 +15,9 @@ tagRoutes.get('/:moduleType', async (req, res) => {
       orderBy: { name: 'asc' },
     });
     res.json(tags);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch tags' });
+  } catch (error: any) {
+    console.error('Error fetching tags:', error);
+    res.status(500).json({ error: 'Failed to fetch tags', details: error?.message });
   }
 });
 

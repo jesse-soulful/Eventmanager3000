@@ -20,7 +20,7 @@ async function main() {
   console.log(`✅ Created event: ${event.name}`);
 
   // Create default statuses for each module
-  const moduleTypes = ['ARTISTS', 'VENDORS', 'MATERIALS', 'FOOD_BEVERAGE', 'SPONSORS', 'MARKETING'];
+  const moduleTypes = ['ARTISTS', 'PRODUCTION', 'FOOD_BEVERAGE', 'COMMUNICATION_MARKETING', 'SPONSORS', 'VENDORS_SUPPLIERS', 'MATERIALS_STOCK', 'STAFF_POOL'];
   const defaultStatuses = [
     { name: 'Draft', color: '#9CA3AF', order: 0, isDefault: true },
     { name: 'Pending', color: '#F59E0B', order: 1, isDefault: false },
@@ -60,13 +60,25 @@ async function main() {
     });
   }
 
-  // Create sample categories for Vendors module
-  const vendorCategories = ['Equipment', 'Security', 'Catering', 'Transportation'];
-  for (const category of vendorCategories) {
+  // Create sample categories for Production module
+  const productionCategories = ['Equipment', 'Security', 'Catering', 'Transportation'];
+  for (const category of productionCategories) {
     await prisma.category.create({
       data: {
         eventId: event.id,
-        moduleType: 'VENDORS',
+        moduleType: 'PRODUCTION',
+        name: category,
+        color: '#3B82F6',
+      },
+    });
+  }
+
+  // Create sample categories for Vendors & Suppliers module (global)
+  const vendorCategories = ['Equipment Supplier', 'Security Provider', 'Catering Service', 'Transportation Company'];
+  for (const category of vendorCategories) {
+    await prisma.category.create({
+      data: {
+        moduleType: 'VENDORS_SUPPLIERS',
         name: category,
         color: '#3B82F6',
       },

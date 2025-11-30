@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Settings } from 'lucide-react';
-import { DollarSign, Calendar, MapPin } from 'lucide-react';
+import { Settings, Edit2 } from 'lucide-react';
+import { DollarSign, Calendar, MapPin, Building2, Users, Phone, User } from 'lucide-react';
 import { eventsApi } from '../lib/api';
 import type { Event, ModuleType } from '@event-management/shared';
-import { MODULE_DISPLAY_NAMES, MODULE_COLORS } from '@event-management/shared';
+import { MODULE_DISPLAY_NAMES, MODULE_COLORS, EVENT_SCOPED_MODULES, ModuleType as ModuleTypeEnum } from '@event-management/shared';
 import { format } from 'date-fns';
+import { EventDetailsModal } from '../components/EventDetailsModal';
 
 export function EventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     if (eventId) {
@@ -30,6 +32,18 @@ export function EventDetailPage() {
     }
   };
 
+  const getBannerUrl = () => {
+    if (!event?.bannerImageUrl) return null;
+    if (event.bannerImageUrl.startsWith('http')) {
+      return event.bannerImageUrl;
+    }
+    // Banner URL from backend is already like /api/events/:id/banner/:filename
+    if (event.bannerImageUrl.startsWith('/api/')) {
+      return event.bannerImageUrl;
+    }
+    return `/api${event.bannerImageUrl}`;
+  };
+
   if (loading) {
     return <div className="text-center py-12">Loading event...</div>;
   }
@@ -38,45 +52,107 @@ export function EventDetailPage() {
     return <div className="text-center py-12">Event not found</div>;
   }
 
-  const modules: ModuleType[] = [
-    'ARTISTS',
-    'VENDORS',
-    'MATERIALS',
-    'FOOD_BEVERAGE',
-    'SPONSORS',
-    'MARKETING',
-  ] as ModuleType[];
+  const modules: ModuleType[] = EVENT_SCOPED_MODULES;
 
   return (
     <div>
       {/* Event Header */}
       <div className="mb-8">
         <div className="flex justify-between items-start mb-6">
-          <div>
+          <div className="flex-1">
             <h1 className="text-4xl font-bold gradient-text mb-3">{event.name}</h1>
             {event.description && (
               <p className="text-gray-600 text-lg mb-4">{event.description}</p>
             )}
           </div>
-          <Link
-            to={`/events/${eventId}/finance`}
-            className="btn btn-primary flex items-center gap-2"
-          >
-            <DollarSign className="w-5 h-5" />
-            Finance Board
-          </Link>
-        </div>
-        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            <span>{format(new Date(event.startDate), 'MMM d, yyyy')} - {format(new Date(event.endDate), 'MMM d, yyyy')}</span>
+          <div className="flex gap-2 ml-4">
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="btn btn-secondary flex items-center gap-2"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit Details
+            </button>
+            <Link
+              to={`/events/${eventId}/finance`}
+              className="btn btn-primary flex items-center gap-2"
+            >
+              <DollarSign className="w-5 h-5" />
+              Finance Board
+            </Link>
           </div>
-          {event.location && (
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              <span>{event.location}</span>
+        </div>
+
+        {/* Event Details Summary */}
+        <div className="card mb-6">
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Event Details</h2>
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="btn btn-secondary flex items-center gap-2 text-sm"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit
+            </button>
+          </div>
+          
+          {/* Banner Preview */}
+          {getBannerUrl() && (
+            <div className="mb-4">
+              <img
+                src={getBannerUrl() || ''}
+                alt={`${event.name} banner`}
+                className="w-full h-32 object-cover rounded-lg border border-gray-200"
+              />
             </div>
           )}
+
+          {/* Compact Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center gap-2 text-gray-600">
+              <Calendar className="w-4 h-4" />
+              <span>{format(new Date(event.startDate), 'MMM d, yyyy')} - {format(new Date(event.endDate), 'MMM d, yyyy')}</span>
+            </div>
+            {event.venueName && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <Building2 className="w-4 h-4" />
+                <span>{event.venueName}</span>
+              </div>
+            )}
+            {event.venueAddress && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <MapPin className="w-4 h-4" />
+                <span>{event.venueAddress}</span>
+              </div>
+            )}
+            {event.venueCapacity && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <Users className="w-4 h-4" />
+                <span>Capacity: {event.venueCapacity.toLocaleString()}</span>
+              </div>
+            )}
+            {event.promotorName && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <User className="w-4 h-4" />
+                <span>Promotor: {event.promotorName}</span>
+                {event.promotorPhone && <span className="text-gray-400">• {event.promotorPhone}</span>}
+              </div>
+            )}
+            {event.artistLiaisonName && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <User className="w-4 h-4" />
+                <span>Artist Liaison: {event.artistLiaisonName}</span>
+                {event.artistLiaisonPhone && <span className="text-gray-400">• {event.artistLiaisonPhone}</span>}
+              </div>
+            )}
+            {event.technicalName && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <User className="w-4 h-4" />
+                <span>Technical: {event.technicalName}</span>
+                {event.technicalPhone && <span className="text-gray-400">• {event.technicalPhone}</span>}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -102,9 +178,9 @@ export function EventDetailPage() {
         {modules.map((moduleType) => (
           <Link
             key={moduleType}
-            to={moduleType === 'ARTISTS' 
+            to={moduleType === ModuleTypeEnum.ARTISTS 
               ? `/events/${eventId}/artists`
-              : `/events/${eventId}/${moduleType.toLowerCase().replace('_', '-')}`
+              : `/events/${eventId}/${moduleType.toLowerCase().replace(/_/g, '-')}`
             }
             className="card-hover group"
           >
@@ -127,7 +203,18 @@ export function EventDetailPage() {
           </Link>
         ))}
       </div>
+
+      {/* Edit Details Modal */}
+      {showEditModal && event && (
+        <EventDetailsModal
+          event={event}
+          onClose={() => setShowEditModal(false)}
+          onSave={() => {
+            loadEvent();
+            setShowEditModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
-

@@ -17,6 +17,7 @@ import type {
   UpdateTagInput,
   FinanceSummary,
   FinanceLineItem,
+  FinanceFilters,
   ModuleType,
   SubLineItemType,
   CreateSubLineItemTypeInput,
@@ -40,6 +41,14 @@ export const eventsApi = {
   create: (data: CreateEventInput) => api.post<Event>('/events', data),
   update: (id: string, data: UpdateEventInput) => api.put<Event>(`/events/${id}`, data),
   delete: (id: string) => api.delete(`/events/${id}`),
+  uploadBanner: (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append('banner', file);
+    return api.post<{ bannerImageUrl: string }>(`/events/${id}/banner`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteBanner: (id: string) => api.delete(`/events/${id}/banner`),
 };
 
 // Line Items
@@ -55,6 +64,10 @@ export const lineItemsApi = {
 export const modulesApi = {
   getLineItems: (eventId: string, moduleType: ModuleType) =>
     api.get<LineItem[]>(`/modules/${eventId}/${moduleType}`),
+  getGlobalModuleLineItems: (moduleType: ModuleType, eventId?: string) => {
+    const url = `/modules/global/${moduleType}${eventId ? `?eventId=${eventId}` : ''}`;
+    return api.get<LineItem[]>(url);
+  },
 };
 
 // Statuses (global metadata - no eventId required)
@@ -97,8 +110,50 @@ export const tagsApi = {
 
 // Finance
 export const financeApi = {
+  // Event-scoped methods (backward compatibility)
   getSummary: (eventId: string) => api.get<FinanceSummary>(`/finance/${eventId}`),
   getLineItems: (eventId: string) => api.get<FinanceLineItem[]>(`/finance/${eventId}/line-items`),
+  // Cross-event methods with filters
+  getCrossEventSummary: (filters?: FinanceFilters) => {
+    const params = new URLSearchParams();
+    if (filters?.eventIds && filters.eventIds.length > 0) {
+      params.append('eventIds', filters.eventIds.join(','));
+    }
+    if (filters?.startDate) {
+      params.append('startDate', filters.startDate.toISOString());
+    }
+    if (filters?.endDate) {
+      params.append('endDate', filters.endDate.toISOString());
+    }
+    if (filters?.moduleTypes && filters.moduleTypes.length > 0) {
+      params.append('moduleTypes', filters.moduleTypes.join(','));
+    }
+    if (filters?.includeSubItems !== undefined) {
+      params.append('includeSubItems', filters.includeSubItems.toString());
+    }
+    const queryString = params.toString();
+    return api.get<FinanceSummary>(`/finance${queryString ? `?${queryString}` : ''}`);
+  },
+  getCrossEventLineItems: (filters?: FinanceFilters) => {
+    const params = new URLSearchParams();
+    if (filters?.eventIds && filters.eventIds.length > 0) {
+      params.append('eventIds', filters.eventIds.join(','));
+    }
+    if (filters?.startDate) {
+      params.append('startDate', filters.startDate.toISOString());
+    }
+    if (filters?.endDate) {
+      params.append('endDate', filters.endDate.toISOString());
+    }
+    if (filters?.moduleTypes && filters.moduleTypes.length > 0) {
+      params.append('moduleTypes', filters.moduleTypes.join(','));
+    }
+    if (filters?.includeSubItems !== undefined) {
+      params.append('includeSubItems', filters.includeSubItems.toString());
+    }
+    const queryString = params.toString();
+    return api.get<FinanceLineItem[]>(`/finance/line-items${queryString ? `?${queryString}` : ''}`);
+  },
 };
 
 // Sub-Line Item Types (global metadata - no eventId required)

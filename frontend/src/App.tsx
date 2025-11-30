@@ -3,6 +3,7 @@ import { Layout } from './components/Layout';
 import { EventsPage } from './pages/EventsPage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import { ModulePage } from './pages/ModulePage';
+import { GlobalModulePage } from './pages/GlobalModulePage';
 import { ArtistsPage } from './pages/ArtistsPage';
 import { FinanceBoardPage } from './pages/FinanceBoardPage';
 import { ManageMetadataPage } from './pages/ManageMetadataPage';
@@ -16,9 +17,13 @@ function App() {
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:eventId" element={<EventDetailPage />} />
           <Route path="/events/:eventId/artists" element={<ArtistsPage />} />
-        <Route path="/events/:eventId/:moduleType" element={<ModulePage />} />
-        <Route path="/events/:eventId/finance" element={<FinanceBoardPage />} />
-        <Route path="/manage-metadata" element={<ManageMetadataPage />} />
+          <Route path="/events/:eventId/:moduleType" element={<ModulePage />} />
+          <Route path="/events/:eventId/finance" element={<FinanceBoardPage />} />
+          <Route path="/finance" element={<FinanceBoardPage />} />
+          <Route path="/vendors-suppliers" element={<GlobalModulePage />} />
+          <Route path="/materials-stock" element={<GlobalModulePage />} />
+          <Route path="/staff-pool" element={<GlobalModulePage />} />
+          <Route path="/manage-metadata" element={<ManageMetadataPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

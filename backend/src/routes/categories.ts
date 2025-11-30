@@ -15,8 +15,9 @@ categoryRoutes.get('/:moduleType', async (req, res) => {
       orderBy: { name: 'asc' },
     });
     res.json(categories);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch categories' });
+  } catch (error: any) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ error: 'Failed to fetch categories', details: error?.message });
   }
 });
 
