@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import { eventRoutes } from './routes/events';
 import { moduleRoutes } from './routes/modules';
 import { lineItemRoutes } from './routes/line-items';
@@ -13,31 +14,49 @@ import { commentRoutes } from './routes/comments';
 import { userRoutes } from './routes/users';
 import { auth } from './lib/auth';
 import { requireAuth } from './middleware/auth';
+import { errorHandler } from './middleware/errorHandler';
+import { apiLimiter, authLimiter } from './middleware/rateLimiter';
+import { env } from './config/env';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = env.PORT;
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      connectSrc: ["'self'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Allow embedding for file previews
+}));
 
 // CORS configuration for auth cookies
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-  ],
+  origin: env.CORS_ORIGINS,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Body parsing with size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Rate limiting
+app.use('/api/', apiLimiter);
 
 // Health check (public)
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// BetterAuth routes (public)
-app.all('/api/auth/*', async (req, res) => {
+// BetterAuth routes (public) - with strict rate limiting
+app.all('/api/auth/*', authLimiter, async (req, res) => {
   try {
     // Convert Express request to Web API Request
     const url = new URL(req.url, `http://${req.headers.host}`);
@@ -75,7 +94,7 @@ app.all('/api/auth/*', async (req, res) => {
     }
   } catch (error: any) {
     console.error('Auth handler error:', error);
-    res.status(500).json({ error: 'Internal server error', message: error?.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -92,7 +111,11 @@ app.use('/api/documents', requireAuth, documentRoutes);
 app.use('/api/comments', requireAuth, commentRoutes);
 app.use('/api/users', requireAuth, userRoutes);
 
+// Error handler must be last middleware
+app.use(errorHandler);
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📝 Environment: ${env.NODE_ENV}`);
 });
 

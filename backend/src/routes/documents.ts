@@ -1,21 +1,31 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
+import { requireAuth } from '../middleware/auth';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { sanitizeFilename, getSafeFilePath, validateMimeType, DOCUMENT_MIME_TYPES } from '../utils/fileSecurity';
+
+const uploadsDir = path.join(process.cwd(), 'uploads');
 
 const upload = multer({
-  dest: path.join(process.cwd(), 'uploads'),
+  dest: uploadsDir,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /\.(pdf|doc|docx|jpg|jpeg|png)$/i;
-    if (allowedTypes.test(file.originalname)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only PDF, DOC, DOCX, and images are allowed.'));
+    // Check extension
+    const allowedExtensions = /\.(pdf|doc|docx|jpg|jpeg|png)$/i;
+    if (!allowedExtensions.test(file.originalname)) {
+      return cb(new Error('Invalid file type. Only PDF, DOC, DOCX, and images are allowed.'));
     }
+    
+    // Validate MIME type
+    if (!validateMimeType(file.mimetype, DOCUMENT_MIME_TYPES)) {
+      return cb(new Error('Invalid file MIME type. File content does not match extension.'));
+    }
+    
+    cb(null, true);
   },
 });
 
@@ -69,7 +79,7 @@ documentRoutes.post('/line-item/:lineItemId', upload.array('documents', 10), asy
     res.json({ documents: newDocuments });
   } catch (error: any) {
     console.error('Error uploading documents:', error);
-    res.status(500).json({ error: 'Failed to upload documents', details: error.message });
+    res.status(500).json({ error: 'Failed to upload documents' });
   }
 });
 
@@ -134,31 +144,49 @@ documentRoutes.delete('/line-item/:lineItemId/:documentIndex', async (req, res) 
   }
 });
 
-// Serve uploaded files
-documentRoutes.get('/file/:filename', async (req, res) => {
+// Serve uploaded files (requires authentication and authorization)
+documentRoutes.get('/file/:filename', requireAuth, async (req, res) => {
   try {
-    const filePath = path.join(process.cwd(), 'uploads', req.params.filename);
-    if (!fs.existsSync(filePath)) {
+    // Sanitize filename to prevent path traversal
+    const safeFilePath = getSafeFilePath(req.params.filename, uploadsDir);
+    if (!safeFilePath || !fs.existsSync(safeFilePath)) {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    // Get file metadata to determine Content-Type
-    let contentType = 'application/octet-stream'; // Default binary
-    let originalName = req.params.filename;
-
-    try {
-      const lineItem = await prisma.lineItem.findFirst({
-        where: {
-          metadata: {
-            contains: req.params.filename,
+    // Find the line item that owns this file to verify access
+    const sanitizedFilename = sanitizeFilename(req.params.filename);
+    const lineItem = await prisma.lineItem.findFirst({
+      where: {
+        metadata: {
+          contains: sanitizedFilename,
+        },
+      },
+      include: {
+        Event: {
+          select: {
+            id: true,
           },
         },
-      });
+      },
+    });
 
-      if (lineItem && lineItem.metadata) {
+    if (!lineItem) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Verify user has access to the event (all authenticated users can access files for now)
+    // In the future, you might want to add more granular permissions here
+    // For example, only users with access to the event can view its files
+
+    // Get file metadata to determine Content-Type
+    let contentType = 'application/octet-stream';
+    let originalName = sanitizedFilename;
+
+    try {
+      if (lineItem.metadata) {
         const metadata = JSON.parse(lineItem.metadata as string);
         const documents = metadata.documents || [];
-        const document = documents.find((doc: any) => doc.filename === req.params.filename);
+        const document = documents.find((doc: any) => doc.filename === sanitizedFilename);
         if (document) {
           if (document.mimetype) {
             contentType = document.mimetype;
@@ -169,12 +197,8 @@ documentRoutes.get('/file/:filename', async (req, res) => {
         }
       }
     } catch (e) {
-      console.error('Error parsing metadata:', e);
-    }
-
-    // Fallback to extension-based detection if metadata not found
-    if (contentType === 'application/octet-stream') {
-      const ext = path.extname(req.params.filename).toLowerCase();
+      // Fallback to extension-based detection if metadata parsing fails
+      const ext = path.extname(sanitizedFilename).toLowerCase();
       const mimeTypes: Record<string, string> = {
         '.pdf': 'application/pdf',
         '.doc': 'application/msword',
@@ -190,7 +214,7 @@ documentRoutes.get('/file/:filename', async (req, res) => {
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(originalName)}"`);
     
-    res.sendFile(path.resolve(filePath));
+    res.sendFile(path.resolve(safeFilePath));
   } catch (error) {
     console.error('Error serving file:', error);
     res.status(500).json({ error: 'Failed to serve file' });

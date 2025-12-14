@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prisma } from './prisma';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { env } from '../config/env';
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -8,7 +9,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false, // Set to true in production
+    requireEmailVerification: env.NODE_ENV === 'production', // Enable in production
   },
   user: {
     additionalFields: {
@@ -22,14 +23,10 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
   },
-  baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
+  baseURL: env.BETTER_AUTH_URL,
   basePath: '/api/auth',
-  secret: process.env.BETTER_AUTH_SECRET || 'change-this-secret-key-in-production',
-  trustedOrigins: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-  ],
+  secret: env.BETTER_AUTH_SECRET,
+  trustedOrigins: env.CORS_ORIGINS || [],
 });
 
 export type Session = typeof auth.$Infer.Session;

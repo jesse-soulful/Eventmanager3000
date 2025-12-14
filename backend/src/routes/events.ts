@@ -3,24 +3,32 @@ import { prisma } from '../lib/prisma';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { sanitizeFilename, getSafeFilePath, validateMimeType, IMAGE_MIME_TYPES } from '../utils/fileSecurity';
+
+const bannersDir = path.join(process.cwd(), 'uploads', 'banners');
 
 const bannerUpload = multer({
-  dest: path.join(process.cwd(), 'uploads', 'banners'),
+  dest: bannersDir,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /\.(jpg|jpeg|png|webp|gif)$/i;
-    if (allowedTypes.test(file.originalname)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only image files (JPG, PNG, WEBP, GIF) are allowed.'));
+    // Check extension
+    const allowedExtensions = /\.(jpg|jpeg|png|webp|gif)$/i;
+    if (!allowedExtensions.test(file.originalname)) {
+      return cb(new Error('Invalid file type. Only image files (JPG, PNG, WEBP, GIF) are allowed.'));
     }
+    
+    // Validate MIME type
+    if (!validateMimeType(file.mimetype, IMAGE_MIME_TYPES)) {
+      return cb(new Error('Invalid file MIME type. File content does not match extension.'));
+    }
+    
+    cb(null, true);
   },
 });
 
 // Ensure banners directory exists
-const bannersDir = path.join(process.cwd(), 'uploads', 'banners');
 if (!fs.existsSync(bannersDir)) {
   fs.mkdirSync(bannersDir, { recursive: true });
 }
@@ -245,16 +253,18 @@ eventRoutes.post('/:id/banner', bannerUpload.single('banner'), async (req, res) 
   }
 });
 
-// Serve banner image
+// Serve banner image (public endpoint, but sanitized)
 eventRoutes.get('/:id/banner/:filename', async (req, res) => {
   try {
-    const filePath = path.join(bannersDir, req.params.filename);
-    if (!fs.existsSync(filePath)) {
+    // Sanitize filename to prevent path traversal
+    const safeFilePath = getSafeFilePath(req.params.filename, bannersDir);
+    if (!safeFilePath || !fs.existsSync(safeFilePath)) {
       return res.status(404).json({ error: 'Banner not found' });
     }
 
     // Determine content type from extension
-    const ext = path.extname(req.params.filename).toLowerCase();
+    const sanitizedFilename = sanitizeFilename(req.params.filename);
+    const ext = path.extname(sanitizedFilename).toLowerCase();
     const mimeTypes: Record<string, string> = {
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
@@ -266,7 +276,7 @@ eventRoutes.get('/:id/banner/:filename', async (req, res) => {
 
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    res.sendFile(path.resolve(filePath));
+    res.sendFile(path.resolve(safeFilePath));
   } catch (error: any) {
     console.error('Error serving banner:', error);
     res.status(500).json({ error: 'Failed to serve banner' });

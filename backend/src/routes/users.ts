@@ -1,29 +1,40 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requireAdmin } from '../middleware/rbac';
 import { requireAuth } from '../middleware/auth';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { sanitizeFilename, getSafeFilePath, validateMimeType, IMAGE_MIME_TYPES } from '../utils/fileSecurity';
+import { validate } from '../middleware/validation';
+import { uuidSchema, updateProfileSchema, changePasswordSchema, updateUserSchema } from '../validation/schemas';
 
 // Profile picture upload configuration
+const profilesDir = path.join(process.cwd(), 'uploads', 'profiles');
+
 const profilePictureUpload = multer({
-  dest: path.join(process.cwd(), 'uploads', 'profiles'),
+  dest: profilesDir,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /\.(jpg|jpeg|png|webp|gif)$/i;
-    if (allowedTypes.test(file.originalname)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only image files (JPG, PNG, WEBP, GIF) are allowed.'));
+    // Check extension
+    const allowedExtensions = /\.(jpg|jpeg|png|webp|gif)$/i;
+    if (!allowedExtensions.test(file.originalname)) {
+      return cb(new Error('Invalid file type. Only image files (JPG, PNG, WEBP, GIF) are allowed.'));
     }
+    
+    // Validate MIME type
+    if (!validateMimeType(file.mimetype, IMAGE_MIME_TYPES)) {
+      return cb(new Error('Invalid file MIME type. File content does not match extension.'));
+    }
+    
+    cb(null, true);
   },
 });
 
 // Ensure profiles directory exists
-const profilesDir = path.join(process.cwd(), 'uploads', 'profiles');
 if (!fs.existsSync(profilesDir)) {
   fs.mkdirSync(profilesDir, { recursive: true });
 }
@@ -50,12 +61,14 @@ userRoutes.get('/', requireAdmin, async (req, res) => {
     res.json(users);
   } catch (error: any) {
     console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users', details: error?.message });
+    res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
 
 // Get user by ID (admin only)
-userRoutes.get('/:id', requireAdmin, async (req, res) => {
+userRoutes.get('/:id', requireAdmin, validate({
+  params: z.object({ id: uuidSchema }),
+}), async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
@@ -76,12 +89,12 @@ userRoutes.get('/:id', requireAdmin, async (req, res) => {
     res.json(user);
   } catch (error: any) {
     console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Failed to fetch user', details: error?.message });
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
 
 // Update own profile (authenticated users can update their name and image)
-userRoutes.put('/profile', requireAuth, async (req, res) => {
+userRoutes.put('/profile', requireAuth, validate({ body: updateProfileSchema }), async (req, res) => {
   try {
     const { name, image } = req.body;
     
@@ -110,7 +123,7 @@ userRoutes.put('/profile', requireAuth, async (req, res) => {
     res.json(user);
   } catch (error: any) {
     console.error('Error updating profile:', error);
-    res.status(500).json({ error: 'Failed to update profile', details: error?.message });
+    res.status(500).json({ error: 'Failed to update profile' });
   }
 });
 
@@ -168,20 +181,22 @@ userRoutes.post('/profile/picture', requireAuth, profilePictureUpload.single('pi
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    res.status(500).json({ error: 'Failed to upload profile picture', details: error?.message });
+    res.status(500).json({ error: 'Failed to upload profile picture' });
   }
 });
 
-// Serve profile picture
+// Serve profile picture (public endpoint, but sanitized)
 userRoutes.get('/profile/picture/:filename', async (req, res) => {
   try {
-    const filePath = path.join(profilesDir, req.params.filename);
-    if (!fs.existsSync(filePath)) {
+    // Sanitize filename to prevent path traversal
+    const safeFilePath = getSafeFilePath(req.params.filename, profilesDir);
+    if (!safeFilePath || !fs.existsSync(safeFilePath)) {
       return res.status(404).json({ error: 'File not found' });
     }
 
     // Determine content type from extension
-    const ext = path.extname(req.params.filename).toLowerCase();
+    const sanitizedFilename = sanitizeFilename(req.params.filename);
+    const ext = path.extname(sanitizedFilename).toLowerCase();
     const mimeTypes: Record<string, string> = {
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
@@ -192,9 +207,9 @@ userRoutes.get('/profile/picture/:filename', async (req, res) => {
     const contentType = mimeTypes[ext] || 'image/jpeg';
 
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(req.params.filename)}"`);
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(sanitizedFilename)}"`);
     
-    res.sendFile(path.resolve(filePath));
+    res.sendFile(path.resolve(safeFilePath));
   } catch (error: any) {
     console.error('Error serving profile picture:', error);
     res.status(500).json({ error: 'Failed to serve profile picture' });
@@ -202,7 +217,7 @@ userRoutes.get('/profile/picture/:filename', async (req, res) => {
 });
 
 // Change password (authenticated users)
-userRoutes.put('/profile/password', requireAuth, async (req, res) => {
+userRoutes.put('/profile/password', requireAuth, validate({ body: changePasswordSchema }), async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     
@@ -277,12 +292,15 @@ userRoutes.put('/profile/password', requireAuth, async (req, res) => {
     res.json({ success: true, message: 'Password updated successfully' });
   } catch (error: any) {
     console.error('Error changing password:', error);
-    res.status(500).json({ error: 'Failed to change password', details: error?.message });
+    res.status(500).json({ error: 'Failed to change password' });
   }
 });
 
 // Update user (admin only)
-userRoutes.put('/:id', requireAdmin, async (req, res) => {
+userRoutes.put('/:id', requireAdmin, validate({
+  params: z.object({ id: uuidSchema }),
+  body: updateUserSchema,
+}), async (req, res) => {
   try {
     const { name, role, emailVerified } = req.body;
     
@@ -318,12 +336,14 @@ userRoutes.put('/:id', requireAdmin, async (req, res) => {
     res.json(user);
   } catch (error: any) {
     console.error('Error updating user:', error);
-    res.status(500).json({ error: 'Failed to update user', details: error?.message });
+    res.status(500).json({ error: 'Failed to update user' });
   }
 });
 
 // Delete user (admin only)
-userRoutes.delete('/:id', requireAdmin, async (req, res) => {
+userRoutes.delete('/:id', requireAdmin, validate({
+  params: z.object({ id: uuidSchema }),
+}), async (req, res) => {
   try {
     const userId = req.params.id;
 
@@ -349,7 +369,7 @@ userRoutes.delete('/:id', requireAdmin, async (req, res) => {
     res.status(204).send();
   } catch (error: any) {
     console.error('Error deleting user:', error);
-    res.status(500).json({ error: 'Failed to delete user', details: error?.message });
+    res.status(500).json({ error: 'Failed to delete user' });
   }
 });
 

@@ -52,8 +52,8 @@ async function createAdminUser() {
 
     console.log('✅ Admin user created successfully!');
     console.log(`Email: ${email}`);
-    console.log(`Password: ${password}`);
     console.log('\n⚠️  Please change the default password after first login!');
+    console.log('⚠️  Password was set but not displayed for security reasons.');
   } catch (error: any) {
     console.error('❌ Failed to create admin user:', error.message);
     process.exit(1);
