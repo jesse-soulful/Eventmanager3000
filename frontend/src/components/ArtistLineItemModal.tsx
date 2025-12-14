@@ -369,7 +369,7 @@ export function ArtistLineItemModal({
                       <span className="text-sm text-gray-700">{doc.name}</span>
                       {doc.url && (
                         <a
-                          href={`http://localhost:3001/api/documents/file/${doc.url.split('/').pop()}`}
+                          href={`/api/documents/file/${doc.url.split('/').pop()}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs text-primary-600 hover:text-primary-800 ml-2"
