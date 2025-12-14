@@ -214,5 +214,9 @@ export const usersApi = {
   getById: (id: string) => api.get<User>(`/users/${id}`),
   update: (id: string, data: UpdateUserInput) => api.put<User>(`/users/${id}`, data),
   delete: (id: string) => api.delete(`/users/${id}`),
+  // Profile management (own profile)
+  updateProfile: (data: { name?: string | null }) => api.put<User>('/users/profile', data),
+  changePassword: (data: { currentPassword: string; newPassword: string }) => 
+    api.put<{ success: boolean; message: string }>('/users/profile/password', data),
 };
 

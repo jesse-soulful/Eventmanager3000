@@ -9,6 +9,7 @@ import { StatusDropdown } from '../components/StatusDropdown';
 import { InlineAmountInput } from '../components/InlineAmountInput';
 import { ModuleStaffAssignments } from '../components/ModuleStaffAssignments';
 import { formatCurrency } from '../lib/utils';
+import { Breadcrumbs } from '../components/Breadcrumbs';
 
 export function ModulePage() {
   const { eventId, moduleType } = useParams<{ eventId: string; moduleType: string }>();
@@ -92,26 +93,30 @@ export function ModulePage() {
   };
 
   if (loading) {
-    return <div className="text-center py-12">Loading...</div>;
+    return <div className="text-center py-12 text-gray-400">Loading...</div>;
   }
 
   return (
     <div>
+      {/* Breadcrumbs */}
+      {event && (
+        <Breadcrumbs 
+          items={[
+            { label: 'Events', href: '/events' },
+            { label: event.name, href: `/events/${eventId}` },
+            { label: MODULE_DISPLAY_NAMES[moduleTypeEnum] }
+          ]} 
+        />
+      )}
+      
       {/* Header */}
-      <div className="mb-8">
-        <Link
-          to={`/events/${eventId}`}
-          className="inline-flex items-center text-gray-600 hover:text-primary-600 mb-6 font-medium transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Event
-        </Link>
+      <div className="page-header">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold gradient-text mb-2">
+            <h1 className="page-title">
               {MODULE_DISPLAY_NAMES[moduleTypeEnum]}
             </h1>
-            <p className="text-gray-600 text-lg">Manage line items for this module</p>
+            <p className="page-subtitle">Manage line items for this module</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -135,11 +140,11 @@ export function ModulePage() {
       {/* Line Items Table */}
       {lineItems.length === 0 ? (
         <div className="card text-center py-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 mb-6">
-            <Plus className="w-10 h-10 text-primary-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-500/20 to-primary-600/20 mb-6 border border-primary-500/30">
+            <Plus className="w-10 h-10 text-primary-400" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">No line items yet</h3>
-          <p className="text-gray-500 mb-6">Get started by adding your first line item</p>
+          <h3 className="text-2xl font-bold text-gray-200 mb-2">No line items yet</h3>
+          <p className="text-gray-400 mb-6">Get started by adding your first line item</p>
           <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
             Add First Line Item
           </button>
@@ -147,48 +152,48 @@ export function ModulePage() {
       ) : (
         <div className="card overflow-hidden p-0">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-800/60">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Tags
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Planned Cost
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Actual Cost
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Quantity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Unit Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Total
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-gray-800/30 divide-y divide-gray-700">
                 {lineItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
+                  <tr key={item.id} className="hover:bg-gray-800/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                      <div className="text-sm font-medium text-gray-100">{item.name}</div>
                       {item.description && (
-                        <div className="text-sm text-gray-500">{item.description}</div>
+                        <div className="text-sm text-gray-400 mt-1">{item.description}</div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -199,15 +204,15 @@ export function ModulePage() {
                         size="sm"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.category?.name || '-'}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      {item.category?.name || <span className="text-gray-500">-</span>}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
                         {item.tags.map((tag: Tag) => (
                           <span
                             key={tag.id}
-                            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-700/50 text-gray-200 border border-gray-600/50"
                           >
                             <TagIcon className="w-3 h-3 mr-1" />
                             {tag.name}
@@ -229,25 +234,25 @@ export function ModulePage() {
                         color="green"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.quantity ?? '-'}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      {item.quantity ?? <span className="text-gray-500">-</span>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.unitPrice ? formatCurrency(item.unitPrice) : '-'}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      {item.unitPrice ? formatCurrency(item.unitPrice) : <span className="text-gray-500">-</span>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {item.totalPrice ? formatCurrency(item.totalPrice) : '-'}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-100">
+                      {item.totalPrice ? formatCurrency(item.totalPrice) : <span className="text-gray-500">-</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => setEditingItem(item)}
-                        className="text-primary-600 hover:text-primary-900 mr-4"
+                        className="text-primary-400 hover:text-primary-300 mr-4 transition-colors"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-400 hover:text-red-300 transition-colors"
                       >
                         Delete
                       </button>

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Plus, ArrowLeft, Tag as TagIcon, Filter } from 'lucide-react';
 import { modulesApi, lineItemsApi, statusesApi, categoriesApi, tagsApi, eventsApi } from '../lib/api';
 import type { LineItem, Status, Category, Tag, ModuleType, Event } from '@event-management/shared';
-import { MODULE_DISPLAY_NAMES, MODULE_COLORS } from '@event-management/shared';
+import { MODULE_DISPLAY_NAMES, MODULE_COLORS, GLOBAL_MODULES } from '@event-management/shared';
 import { LineItemModal } from '../components/LineItemModal';
 import { StatusDropdown } from '../components/StatusDropdown';
 import { InlineAmountInput } from '../components/InlineAmountInput';
@@ -11,7 +11,7 @@ import { formatCurrency } from '../lib/utils';
 import { format } from 'date-fns';
 
 export function GlobalModulePage() {
-  const { moduleType } = useParams<{ moduleType: string }>();
+  const location = useLocation();
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -22,18 +22,26 @@ export function GlobalModulePage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingItem, setEditingItem] = useState<LineItem | null>(null);
 
-  const moduleTypeEnum = moduleType?.toUpperCase().replace(/-/g, '_') as ModuleType;
+  // Extract moduleType from URL pathname
+  // Routes: /vendors-suppliers, /materials-stock
+  const pathname = location.pathname;
+  const pathnameWithoutSlash = pathname.replace(/^\//, ''); // Remove leading slash
+  
+  // Map pathname to ModuleType enum
+  const moduleTypeEnum: ModuleType | undefined = GLOBAL_MODULES.find(
+    (mt) => mt.toLowerCase().replace(/_/g, '-') === pathnameWithoutSlash
+  ) as ModuleType | undefined;
 
   useEffect(() => {
-    console.log('GlobalModulePage: moduleType from URL:', moduleType, '-> parsed:', moduleTypeEnum);
+    console.log('GlobalModulePage: pathname:', pathname, 'pathnameWithoutSlash:', pathnameWithoutSlash, '-> moduleTypeEnum:', moduleTypeEnum);
     if (moduleTypeEnum) {
       loadEvents();
       loadData();
     } else {
-      console.warn('GlobalModulePage: Invalid or missing moduleType:', moduleType);
+      console.warn('GlobalModulePage: Invalid or missing moduleType from pathname:', pathname);
       setLoading(false);
     }
-  }, [moduleTypeEnum, selectedEventId]);
+  }, [pathname, pathnameWithoutSlash, moduleTypeEnum, selectedEventId]);
 
   const loadEvents = async () => {
     try {
@@ -117,27 +125,32 @@ export function GlobalModulePage() {
     }
   };
 
+  if (!moduleTypeEnum) {
+    return (
+      <div className="card text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-100 mb-2">Invalid Module</h2>
+        <p className="text-gray-400 mb-4">Could not determine module type from URL: {pathname}</p>
+        <Link to="/events" className="btn btn-primary">
+          Back to Events
+        </Link>
+      </div>
+    );
+  }
+
   if (loading) {
-    return <div className="text-center py-12">Loading...</div>;
+    return <div className="text-center py-12 text-gray-400">Loading...</div>;
   }
 
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <Link
-          to="/events"
-          className="inline-flex items-center text-gray-600 hover:text-primary-600 mb-6 font-medium transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Events
-        </Link>
+      <div className="page-header">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold gradient-text mb-2">
+            <h1 className="page-title">
               {MODULE_DISPLAY_NAMES[moduleTypeEnum]}
             </h1>
-            <p className="text-gray-600 text-lg">Manage suppliers, materials, and invoices across all events</p>
+            <p className="page-subtitle">Manage suppliers, materials, and invoices across all events</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -152,12 +165,12 @@ export function GlobalModulePage() {
       {/* Event Filter */}
       <div className="card mb-6">
         <div className="flex items-center gap-4">
-          <Filter className="w-5 h-5 text-gray-500" />
-          <label className="text-sm font-medium text-gray-700">Filter by Event:</label>
+          <Filter className="w-5 h-5 text-gray-400" />
+          <label className="text-sm font-semibold text-gray-300">Filter by Event:</label>
           <select
             value={selectedEventId}
             onChange={(e) => setSelectedEventId(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="px-3 py-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
           >
             <option value="">All Events</option>
             {events.map(event => (
@@ -169,7 +182,7 @@ export function GlobalModulePage() {
           {selectedEventId && (
             <button
               onClick={() => setSelectedEventId('')}
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
             >
               Clear
             </button>
@@ -180,11 +193,11 @@ export function GlobalModulePage() {
       {/* Line Items Table */}
       {lineItems.length === 0 ? (
         <div className="card text-center py-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 mb-6">
-            <Plus className="w-10 h-10 text-primary-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-500/20 to-primary-600/20 mb-6 border border-primary-500/30">
+            <Plus className="w-10 h-10 text-primary-400" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">No items yet</h3>
-          <p className="text-gray-500 mb-6">Get started by adding your first item</p>
+          <h3 className="text-2xl font-bold text-gray-200 mb-2">No items yet</h3>
+          <p className="text-gray-400 mb-6">Get started by adding your first item</p>
           <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
             Add First Item
           </button>
@@ -192,60 +205,60 @@ export function GlobalModulePage() {
       ) : (
         <div className="card overflow-hidden p-0">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-800/60">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Event
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Tags
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Planned Cost
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Actual Cost
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Quantity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Unit Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Total
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-gray-800/30 divide-y divide-gray-700">
                 {lineItems.map((item) => {
                   const event = (item as any).event;
                   return (
-                    <tr key={item.id} className="hover:bg-gray-50">
+                    <tr key={item.id} className="hover:bg-gray-800/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                        <div className="text-sm font-medium text-gray-100">{item.name}</div>
                         {item.description && (
-                          <div className="text-sm text-gray-500">{item.description}</div>
+                          <div className="text-sm text-gray-400 mt-1">{item.description}</div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {event ? (
                           <Link
                             to={`/events/${event.id}`}
-                            className="text-sm text-primary-600 hover:text-primary-900"
+                            className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
                           >
                             {event.name}
                           </Link>
@@ -261,15 +274,15 @@ export function GlobalModulePage() {
                           size="sm"
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.category?.name || '-'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {item.category?.name || <span className="text-gray-500">-</span>}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-1">
                           {item.tags.map((tag: Tag) => (
                             <span
                               key={tag.id}
-                              className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                              className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-700/50 text-gray-200 border border-gray-600/50"
                             >
                               <TagIcon className="w-3 h-3 mr-1" />
                               {tag.name}
@@ -291,25 +304,25 @@ export function GlobalModulePage() {
                           color="green"
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.quantity ?? '-'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {item.quantity ?? <span className="text-gray-500">-</span>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.unitPrice ? formatCurrency(item.unitPrice) : '-'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {item.unitPrice ? formatCurrency(item.unitPrice) : <span className="text-gray-500">-</span>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {item.totalPrice ? formatCurrency(item.totalPrice) : '-'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-100">
+                        {item.totalPrice ? formatCurrency(item.totalPrice) : <span className="text-gray-500">-</span>}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => setEditingItem(item)}
-                          className="text-primary-600 hover:text-primary-900 mr-4"
+                          className="text-primary-400 hover:text-primary-300 mr-4 transition-colors"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-400 hover:text-red-300 transition-colors"
                         >
                           Delete
                         </button>

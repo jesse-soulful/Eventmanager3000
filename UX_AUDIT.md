@@ -118,5 +118,5 @@ Both opened the same modal, creating redundancy.
    - Select multiple items and perform actions (delete, change status, etc.)
    - Especially useful for managing many line items
 
-
+image.png
 

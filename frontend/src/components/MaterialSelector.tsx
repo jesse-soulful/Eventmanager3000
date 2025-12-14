@@ -94,15 +94,15 @@ export function MaterialSelector({
       {label && <label className="label">{label}</label>}
       <div className="relative">
         {value ? (
-          <div className="flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-gray-50">
+          <div className="flex items-center justify-between p-3 border border-gray-700 rounded-lg bg-gray-800/50">
             <div>
-              <div className="font-medium text-gray-900">{value.name}</div>
-              {value.description && <div className="text-sm text-gray-600">{value.description}</div>}
+              <div className="font-medium text-gray-200">{value.name}</div>
+              {value.description && <div className="text-sm text-gray-400">{value.description}</div>}
             </div>
             <button
               type="button"
               onClick={handleClear}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-200 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -125,15 +125,15 @@ export function MaterialSelector({
         )}
 
         {showDropdown && !value && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700/50 rounded-lg shadow-2xl max-h-60 overflow-y-auto backdrop-blur-sm">
             {loading ? (
-              <div className="p-4 text-center text-gray-500">Loading...</div>
+              <div className="p-4 text-center text-gray-400">Loading...</div>
             ) : searchQuery.length === 0 ? (
               <div className="p-4">
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(true)}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-600 hover:bg-primary-50 rounded-lg"
+                  className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-400 hover:bg-primary-500/10 rounded-lg transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Create new material
@@ -141,11 +141,11 @@ export function MaterialSelector({
               </div>
             ) : materials.length === 0 ? (
               <div className="p-4">
-                <div className="text-sm text-gray-500 mb-2">No materials found</div>
+                <div className="text-sm text-gray-400 mb-2">No materials found</div>
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(true)}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-600 hover:bg-primary-50 rounded-lg"
+                  className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-400 hover:bg-primary-500/10 rounded-lg transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Create "{searchQuery}"
@@ -158,17 +158,17 @@ export function MaterialSelector({
                     key={material.id}
                     type="button"
                     onClick={() => handleSelect(material)}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                    className="w-full px-4 py-3 text-left hover:bg-gray-700/50 border-b border-gray-700/50 last:border-b-0 transition-colors text-gray-200"
                   >
-                    <div className="font-medium text-gray-900">{material.name}</div>
-                    {material.description && <div className="text-sm text-gray-600">{material.description}</div>}
+                    <div className="font-medium text-gray-200">{material.name}</div>
+                    {material.description && <div className="text-sm text-gray-400">{material.description}</div>}
                   </button>
                 ))}
-                <div className="border-t border-gray-200 p-2">
+                <div className="border-t border-gray-700/50 p-2">
                   <button
                     type="button"
                     onClick={() => setShowCreateForm(true)}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-600 hover:bg-primary-50 rounded-lg"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-400 hover:bg-primary-500/10 rounded-lg transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Create new material
@@ -180,8 +180,8 @@ export function MaterialSelector({
         )}
 
         {showCreateForm && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4">
-            <h4 className="font-semibold mb-3">Create New Material</h4>
+          <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700/50 rounded-lg shadow-2xl p-4 backdrop-blur-sm">
+            <h4 className="font-semibold mb-3 text-gray-200">Create New Material</h4>
             <div className="space-y-3">
               <input
                 type="text"

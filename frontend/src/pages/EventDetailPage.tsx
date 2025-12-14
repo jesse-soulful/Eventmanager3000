@@ -8,6 +8,7 @@ import { MODULE_DISPLAY_NAMES, MODULE_COLORS, EVENT_SCOPED_MODULES, ModuleType a
 import { format } from 'date-fns';
 import { EventDetailsModal } from '../components/EventDetailsModal';
 import { EventStaffOverview } from '../components/EventStaffOverview';
+import { Breadcrumbs } from '../components/Breadcrumbs';
 
 export function EventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -63,24 +64,27 @@ export function EventDetailPage() {
   };
 
   if (loading) {
-    return <div className="text-center py-12">Loading event...</div>;
+    return <div className="text-center py-12 text-gray-400">Loading event...</div>;
   }
 
   if (!event) {
-    return <div className="text-center py-12">Event not found</div>;
+    return <div className="text-center py-12 text-gray-400">Event not found</div>;
   }
 
   const modules: ModuleType[] = EVENT_SCOPED_MODULES;
 
   return (
     <div>
+      {/* Breadcrumbs */}
+      <Breadcrumbs items={[{ label: 'Events', href: '/events' }, { label: event.name }]} />
+      
       {/* Event Header */}
-      <div className="mb-8">
+      <div className="page-header">
         <div className="flex justify-between items-start mb-6">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold gradient-text mb-3">{event.name}</h1>
+            <h1 className="page-title">{event.name}</h1>
             {event.description && (
-              <p className="text-gray-600 text-lg mb-4">{event.description}</p>
+              <p className="page-subtitle mb-4">{event.description}</p>
             )}
           </div>
           <div className="flex gap-2 ml-4">
@@ -103,105 +107,146 @@ export function EventDetailPage() {
 
         {/* Event Details Summary */}
         <div className="card mb-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Event Details</h2>
-          </div>
-          
           {/* Banner Preview */}
           {getBannerUrl() && (
-            <div className="mb-4">
+            <div className="mb-6 -mx-6 -mt-6">
               <img
                 src={getBannerUrl() || ''}
                 alt={`${event.name} banner`}
-                className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                className="w-full h-48 object-cover rounded-t-2xl"
               />
             </div>
           )}
-
-          {/* Event Section */}
+          
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Event</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center gap-2 text-gray-600">
+            <h2 className="text-2xl font-bold text-gray-100 mb-6">Event Details</h2>
+            
+            {/* Event Section */}
+            <div className="mb-6 pb-6 border-b border-gray-700">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase mb-4 tracking-wider flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                <span>{format(new Date(event.startDate), 'MMM d, yyyy')} - {format(new Date(event.endDate), 'MMM d, yyyy')}</span>
+                Event Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Date Range</div>
+                    <div className="text-sm font-medium text-gray-200">
+                      {format(new Date(event.startDate), 'MMM d, yyyy')} - {format(new Date(event.endDate), 'MMM d, yyyy')}
+                    </div>
+                  </div>
+                </div>
+                {event.eventLink && (
+                  <div className="flex items-start gap-3">
+                    <LinkIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Event Link</div>
+                      <a href={event.eventLink} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary-400 hover:text-primary-300 transition-colors break-all">
+                        {event.eventLink}
+                      </a>
+                    </div>
+                  </div>
+                )}
+                {event.ticketshopLink && (
+                  <div className="flex items-start gap-3">
+                    <LinkIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Ticketshop Link</div>
+                      <a href={event.ticketshopLink} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary-400 hover:text-primary-300 transition-colors break-all">
+                        {event.ticketshopLink}
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
-              {event.eventLink && (
-                <div className="flex items-center gap-2 text-gray-600">
-                  <LinkIcon className="w-4 h-4" />
-                  <a href={event.eventLink} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
-                    Event Link
-                  </a>
-                </div>
-              )}
-              {event.ticketshopLink && (
-                <div className="flex items-center gap-2 text-gray-600">
-                  <LinkIcon className="w-4 h-4" />
-                  <a href={event.ticketshopLink} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
-                    Ticketshop Link
-                  </a>
-                </div>
-              )}
             </div>
+
+            {/* Venue Details Section */}
+            {(event.venueName || event.venueAddress || event.venueCapacity) && (
+              <div className="mb-6 pb-6 border-b border-gray-700">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase mb-4 tracking-wider flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
+                  Venue Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {event.venueName && (
+                    <div className="flex items-start gap-3">
+                      <Building2 className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Venue Name</div>
+                        <div className="text-sm font-medium text-gray-200">{event.venueName}</div>
+                      </div>
+                    </div>
+                  )}
+                  {event.venueAddress && (
+                    <div className="flex items-start gap-3">
+                      <MapPin className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Address</div>
+                        <div className="text-sm font-medium text-gray-200">{event.venueAddress}</div>
+                      </div>
+                    </div>
+                  )}
+                  {event.venueCapacity && (
+                    <div className="flex items-start gap-3">
+                      <Users className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Capacity</div>
+                        <div className="text-sm font-medium text-gray-200">{event.venueCapacity.toLocaleString()} people</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Contacts Section */}
+            {(event.promotorName || event.artistLiaisonName) && (
+              <div className="mb-6 pb-6 border-b border-gray-700">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase mb-4 tracking-wider flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Contacts
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {event.promotorName && (
+                    <div className="flex items-start gap-3">
+                      <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Promotor</div>
+                        <div className="text-sm font-medium text-gray-200">
+                          {event.promotorName}
+                          {event.promotorPhone && <span className="text-gray-400 ml-2">• {event.promotorPhone}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {event.artistLiaisonName && (
+                    <div className="flex items-start gap-3">
+                      <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Artist Liaison</div>
+                        <div className="text-sm font-medium text-gray-200">
+                          {event.artistLiaisonName}
+                          {event.artistLiaisonPhone && <span className="text-gray-400 ml-2">• {event.artistLiaisonPhone}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Running Order Section */}
+            {event.runningOrder && (
+              <div>
+                <h3 className="text-xs font-semibold text-gray-400 uppercase mb-4 tracking-wider">Running Order</h3>
+                <div className="text-sm text-gray-300 whitespace-pre-wrap bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                  {event.runningOrder}
+                </div>
+              </div>
+            )}
           </div>
-
-          {/* Venue Details Section */}
-          {(event.venueName || event.venueAddress || event.venueCapacity) && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Venue Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                {event.venueName && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Building2 className="w-4 h-4" />
-                    <span>{event.venueName}</span>
-                  </div>
-                )}
-                {event.venueAddress && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <MapPin className="w-4 h-4" />
-                    <span>{event.venueAddress}</span>
-                  </div>
-                )}
-                {event.venueCapacity && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Users className="w-4 h-4" />
-                    <span>Capacity: {event.venueCapacity.toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Contacts Section */}
-          {(event.promotorName || event.artistLiaisonName) && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Contacts</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                {event.promotorName && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <User className="w-4 h-4" />
-                    <span>Promotor: {event.promotorName}</span>
-                    {event.promotorPhone && <span className="text-gray-400">• {event.promotorPhone}</span>}
-                  </div>
-                )}
-                {event.artistLiaisonName && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <User className="w-4 h-4" />
-                    <span>Artist Liaison: {event.artistLiaisonName}</span>
-                    {event.artistLiaisonPhone && <span className="text-gray-400">• {event.artistLiaisonPhone}</span>}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Running Order Section */}
-          {event.runningOrder && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Running Order</h3>
-              <div className="text-sm text-gray-600 whitespace-pre-wrap">{event.runningOrder}</div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -209,34 +254,42 @@ export function EventDetailPage() {
       {event && <EventStaffOverview event={event} />}
 
       {/* Modules Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {modules.map((moduleType) => (
-          <Link
-            key={moduleType}
-            to={moduleType === ModuleTypeEnum.ARTISTS 
-              ? `/events/${eventId}/artists`
-              : `/events/${eventId}/${moduleType.toLowerCase().replace(/_/g, '-')}`
-            }
-            className="card-hover group"
-          >
-            <div className="flex items-center gap-4">
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-200"
-                style={{ 
-                  background: `linear-gradient(135deg, ${MODULE_COLORS[moduleType]} 0%, ${MODULE_COLORS[moduleType]}dd 100%)`
-                }}
-              >
-                {MODULE_DISPLAY_NAMES[moduleType].charAt(0)}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-100 mb-6">Modules</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {modules.map((moduleType) => (
+            <Link
+              key={moduleType}
+              to={moduleType === ModuleTypeEnum.ARTISTS 
+                ? `/events/${eventId}/artists`
+                : `/events/${eventId}/${moduleType.toLowerCase().replace(/_/g, '-')}`
+              }
+              className="card-hover group relative overflow-hidden"
+            >
+              <div className="flex items-center gap-4 p-2">
+                <div
+                  className="w-16 h-16 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-all duration-300 flex-shrink-0"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${MODULE_COLORS[moduleType]} 0%, ${MODULE_COLORS[moduleType]}dd 100%)`
+                  }}
+                >
+                  {MODULE_DISPLAY_NAMES[moduleType].charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-bold text-gray-100 group-hover:text-primary-400 transition-colors mb-1">
+                    {MODULE_DISPLAY_NAMES[moduleType]}
+                  </h3>
+                  <p className="text-sm text-gray-400">Manage line items</p>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg className="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary-600 transition-colors mb-1">
-                  {MODULE_DISPLAY_NAMES[moduleType]}
-                </h3>
-                <p className="text-sm text-gray-500">Manage line items</p>
-              </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Edit Details Modal */}

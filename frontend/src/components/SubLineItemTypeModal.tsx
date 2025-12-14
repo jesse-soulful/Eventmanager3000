@@ -33,7 +33,7 @@ export function SubLineItemTypeModal({ subLineItemType, onClose, onSave }: SubLi
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div className="bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-700">
         <h2 className="text-2xl font-bold gradient-text mb-4">
           {subLineItemType ? 'Edit Sub-Line Item Type' : 'Create Sub-Line Item Type'}
         </h2>

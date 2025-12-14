@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, ArrowLeft, Edit2, Trash2, Mail, Phone, User, Calendar, DollarSign } from 'lucide-react';
+import { Plus, ArrowLeft, Edit2, Trash2, Mail, Phone, User, Calendar, DollarSign, MessageSquare } from 'lucide-react';
 import { modulesApi, lineItemsApi, statusesApi, categoriesApi, tagsApi, eventsApi, subLineItemTypesApi } from '../lib/api';
 import type { LineItem, Status, Category, Tag, Event, SubLineItemType, ModuleType } from '@event-management/shared';
 import { ModuleType as ModuleTypeEnum, StaffRole, STAFF_ROLE_DISPLAY_NAMES, MODULE_DISPLAY_NAMES } from '@event-management/shared';
@@ -102,24 +102,17 @@ export function StaffPoolPage() {
   };
 
   if (loading) {
-    return <div className="text-center py-12">Loading staff pool...</div>;
+    return <div className="text-center py-12 text-gray-400">Loading staff pool...</div>;
   }
 
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <Link
-          to="/events"
-          className="inline-flex items-center text-gray-600 hover:text-primary-600 mb-6 font-medium transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Events
-        </Link>
+      <div className="page-header">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold gradient-text mb-2">Staff Pool</h1>
-            <p className="text-gray-600 text-lg">Manage staff contacts, roles, and event assignments</p>
+            <h1 className="page-title">Staff Pool</h1>
+            <p className="page-subtitle">Manage staff contacts, roles, and event assignments</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -134,11 +127,11 @@ export function StaffPoolPage() {
       {/* Event Filter */}
       <div className="card mb-6">
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700">Filter by Event:</label>
+          <label className="text-sm font-semibold text-gray-300">Filter by Event:</label>
           <select
             value={selectedEventId}
             onChange={(e) => setSelectedEventId(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="px-3 py-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
           >
             <option value="">All Events</option>
             {events.map(event => (
@@ -150,7 +143,7 @@ export function StaffPoolPage() {
           {selectedEventId && (
             <button
               onClick={() => setSelectedEventId('')}
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
             >
               Clear
             </button>
@@ -161,11 +154,11 @@ export function StaffPoolPage() {
       {/* Staff Members List */}
       {staffMembers.length === 0 ? (
         <div className="card text-center py-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 mb-6">
-            <Plus className="w-10 h-10 text-primary-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-500/20 to-primary-600/20 mb-6 border border-primary-500/30">
+            <Plus className="w-10 h-10 text-primary-400" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">No staff members yet</h3>
-          <p className="text-gray-500 mb-6">Get started by adding your first staff member</p>
+          <h3 className="text-2xl font-bold text-gray-200 mb-2">No staff members yet</h3>
+          <p className="text-gray-400 mb-6">Get started by adding your first staff member</p>
           <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
             Add First Staff Member
           </button>
@@ -182,12 +175,12 @@ export function StaffPoolPage() {
             const event = (staff as any).event;
 
             return (
-              <div key={staff.id} className="card">
+              <div key={staff.id} className="line-item-card">
                 {/* Staff Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-bold text-gray-900">{staff.name}</h3>
+                <div className="line-item-header">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-3 flex-wrap">
+                      <h3 className="text-xl font-bold text-gray-100">{staff.name}</h3>
                       <StatusDropdown
                         statuses={statuses}
                         currentStatus={staff.status || null}
@@ -195,39 +188,43 @@ export function StaffPoolPage() {
                         size="sm"
                       />
                     </div>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    
+                    {/* Contact Information */}
+                    <div className="flex flex-wrap gap-4 mb-3">
                       {email && (
-                        <div className="flex items-center gap-1">
-                          <Mail className="w-4 h-4" />
-                          <span>{email}</span>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="text-gray-300">{email}</span>
                         </div>
                       )}
                       {phone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="w-4 h-4" />
-                          <span>{phone}</span>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="text-gray-300">{phone}</span>
                         </div>
                       )}
                       {event && (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
                           <Link
                             to={`/events/${event.id}`}
-                            className="text-primary-600 hover:text-primary-800"
+                            className="text-primary-400 hover:text-primary-300 transition-colors"
                           >
                             {event.name}
                           </Link>
                         </div>
                       )}
                     </div>
+                    
+                    {/* Can Work As Roles */}
                     {canWorkAs.length > 0 && (
                       <div className="mt-3">
-                        <div className="text-xs font-medium text-gray-500 mb-1">Can work as:</div>
+                        <div className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Can work as</div>
                         <div className="flex flex-wrap gap-2">
                           {canWorkAs.map((role: StaffRole) => (
                             <span
                               key={role}
-                              className="px-2 py-1 bg-primary-100 text-primary-700 rounded text-xs font-medium"
+                              className="px-2.5 py-1 bg-primary-500/20 text-primary-300 border border-primary-500/30 rounded-full text-xs font-semibold"
                             >
                               {STAFF_ROLE_DISPLAY_NAMES[role]}
                             </span>
@@ -236,45 +233,49 @@ export function StaffPoolPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="line-item-actions">
                     <button
                       onClick={() => {
                         setEditingItem(staff);
                         setShowCreateModal(true);
                       }}
-                      className="btn btn-secondary"
+                      className="action-btn-primary"
+                      title="Edit staff member"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Edit2 className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleDelete(staff.id)}
-                      className="btn btn-danger"
+                      className="action-btn-danger"
+                      title="Delete staff member"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
 
                 {/* Event History Section */}
-                <div className="border-t border-gray-200 pt-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-gray-900">Event History</h4>
+                <div className="expandable-section">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Event History</h4>
                     <button
                       onClick={() => {
                         setParentItemId(staff.id);
                         setEditingItem(null);
                         setShowSubLineItemModal(true);
                       }}
-                      className="btn btn-secondary btn-sm flex items-center gap-1"
+                      className="px-3 py-1.5 text-xs font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors flex items-center gap-1.5 border border-gray-700 hover:border-gray-600"
                     >
-                      <Plus className="w-3 h-3" />
-                      Add Event Assignment
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Assignment
                     </button>
                   </div>
                   {subItems.length === 0 ? (
-                    <p className="text-sm text-gray-500">No event assignments yet</p>
+                    <div className="empty-state-card">
+                      <p className="text-sm">No event assignments yet</p>
+                    </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {subItems.map((subItem) => {
                         const subEvent = (subItem as any).event;
                         const subMetadata = typeof subItem.metadata === 'string' 
@@ -287,17 +288,17 @@ export function StaffPoolPage() {
                           : null;
                         
                         return (
-                          <div key={subItem.id} className="p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                  <span className="font-medium text-gray-900">{subItem.name}</span>
+                          <div key={subItem.id} className="sub-item-card">
+                            <div className="sub-item-content">
+                              <div className="sub-item-header">
+                                <div className="sub-item-name-section">
+                                  <span className="font-semibold text-gray-100">{subItem.name}</span>
                                   {subEvent && (
                                     <>
-                                      <span className="text-gray-400">•</span>
+                                      <span className="text-gray-500">•</span>
                                       <Link
                                         to={`/events/${subEvent.id}`}
-                                        className="text-sm text-primary-600 hover:text-primary-800"
+                                        className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
                                       >
                                         {subEvent.name}
                                       </Link>
@@ -305,59 +306,63 @@ export function StaffPoolPage() {
                                   )}
                                   {moduleDisplayName && (
                                     <>
-                                      <span className="text-gray-400">•</span>
-                                      <span className="text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded">
+                                      <span className="text-gray-500">•</span>
+                                      <span className="text-xs px-2 py-0.5 bg-primary-500/20 text-primary-300 border border-primary-500/30 rounded-full font-semibold">
                                         {moduleDisplayName}
                                       </span>
                                     </>
                                   )}
                                   {role && (
-                                    <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 rounded">
+                                    <span className="text-xs px-2 py-0.5 bg-gray-700 text-gray-200 border border-gray-600 rounded-full font-medium">
                                       {role}
                                     </span>
                                   )}
                                 </div>
-                                {subItem.description && (
-                                  <p className="text-sm text-gray-600 mb-2">{subItem.description}</p>
+                              </div>
+                              {subItem.description && (
+                                <p className="text-sm text-gray-400 mb-3">{subItem.description}</p>
+                              )}
+                              <div className="flex flex-wrap gap-4 text-xs">
+                                {subItem.plannedCost && (
+                                  <div className="flex items-center gap-1.5">
+                                    <DollarSign className="w-3.5 h-3.5 text-gray-400" />
+                                    <span className="text-gray-400">Planned:</span>
+                                    <span className="text-blue-400 font-semibold">{formatCurrency(subItem.plannedCost)}</span>
+                                  </div>
                                 )}
-                                <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-                                  {subItem.plannedCost && (
-                                    <div className="flex items-center gap-1">
-                                      <DollarSign className="w-3 h-3" />
-                                      <span>Planned: {formatCurrency(subItem.plannedCost)}</span>
-                                    </div>
-                                  )}
-                                  {subItem.actualCost && (
-                                    <div className="flex items-center gap-1">
-                                      <DollarSign className="w-3 h-3" />
-                                      <span>Actual: {formatCurrency(subItem.actualCost)}</span>
-                                    </div>
-                                  )}
-                                </div>
+                                {subItem.actualCost && (
+                                  <div className="flex items-center gap-1.5">
+                                    <DollarSign className="w-3.5 h-3.5 text-gray-400" />
+                                    <span className="text-gray-400">Actual:</span>
+                                    <span className="text-emerald-400 font-semibold">{formatCurrency(subItem.actualCost)}</span>
+                                  </div>
+                                )}
                               </div>
-                              <div className="flex gap-1">
-                                <FileAttachmentsButton lineItemId={subItem.id} />
-                                <button
-                                  onClick={() => {
-                                    setCommentsLineItemId(subItem.id);
-                                    setCommentsLineItemName(subItem.name);
-                                    setShowCommentsModal(true);
-                                  }}
-                                  className="btn btn-secondary btn-sm"
-                                >
-                                  Comments
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setEditingItem(subItem);
-                                    setParentItemId(staff.id);
-                                    setShowSubLineItemModal(true);
-                                  }}
-                                  className="btn btn-secondary btn-sm"
-                                >
-                                  <Edit2 className="w-3 h-3" />
-                                </button>
-                              </div>
+                            </div>
+                            <div className="line-item-actions">
+                              <FileAttachmentsButton lineItemId={subItem.id} onUpdate={loadData} />
+                              <button
+                                onClick={() => {
+                                  setCommentsLineItemId(subItem.id);
+                                  setCommentsLineItemName(subItem.name);
+                                  setShowCommentsModal(true);
+                                }}
+                                className="action-btn-primary"
+                                title="View comments"
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingItem(subItem);
+                                  setParentItemId(staff.id);
+                                  setShowSubLineItemModal(true);
+                                }}
+                                className="action-btn-primary"
+                                title="Edit assignment"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
                         );

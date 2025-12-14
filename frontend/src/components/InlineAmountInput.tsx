@@ -81,15 +81,15 @@ export function InlineAmountInput({
   };
 
   const colorClasses = {
-    blue: 'text-blue-600',
-    green: 'text-green-600',
-    gray: 'text-gray-900',
+    blue: 'text-blue-400',
+    green: 'text-emerald-400',
+    gray: 'text-gray-200',
   };
 
   if (isEditing) {
     return (
       <div className="flex items-center gap-1">
-        <span className="text-sm text-gray-500">{prefix}</span>
+        <span className="text-sm text-gray-400">{prefix}</span>
         <input
           ref={inputRef}
           type="number"
@@ -99,14 +99,14 @@ export function InlineAmountInput({
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
           disabled={isSaving}
-          className={`w-24 px-2 py-0.5 text-sm border border-primary-500 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 ${className}`}
+          className={`w-24 px-2 py-0.5 text-sm border border-primary-500 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 bg-gray-900/80 text-gray-100 placeholder-gray-500 ${className}`}
           placeholder={placeholder}
         />
         <button
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="text-green-600 hover:text-green-800 disabled:opacity-50"
+          className="text-emerald-400 hover:text-emerald-300 disabled:opacity-50"
           title="Save"
         >
           <Check className="w-3 h-3" />
@@ -115,7 +115,7 @@ export function InlineAmountInput({
           type="button"
           onClick={handleCancel}
           disabled={isSaving}
-          className="text-red-600 hover:text-red-800 disabled:opacity-50"
+          className="text-red-400 hover:text-red-300 disabled:opacity-50"
           title="Cancel"
         >
           <X className="w-3 h-3" />
@@ -135,13 +135,13 @@ export function InlineAmountInput({
       type="button"
       onClick={handleClick}
       disabled={disabled}
-      className={`text-sm font-semibold hover:bg-gray-100 px-2 py-1 rounded transition-colors ${
+      className={`text-sm font-semibold hover:bg-gray-700/50 px-2 py-1 rounded transition-colors ${
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-      } ${displayValue ? colorClasses[color] : 'text-gray-400'} ${className}`}
+      } ${displayValue ? colorClasses[color] : 'text-gray-500'} ${className}`}
       title={displayValue ? `Click to edit: ${displayValue}` : `Click to add ${placeholder}`}
     >
       {displayValue || (
-        <span className="italic text-gray-400">{placeholder}</span>
+        <span className="italic text-gray-500">{placeholder}</span>
       )}
     </button>
   );

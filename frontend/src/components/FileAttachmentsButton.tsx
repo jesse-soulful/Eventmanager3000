@@ -108,7 +108,7 @@ export function FileAttachmentsButton({ lineItemId, onUpdate }: FileAttachmentsB
         type="button"
         onClick={() => setShowFiles(!showFiles)}
         disabled={uploading || loading}
-        className="relative p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="relative p-2 rounded-full text-gray-400 hover:bg-gray-700/50 hover:text-primary-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         title="Attach files"
       >
         <Paperclip className="w-5 h-5" />
@@ -121,10 +121,10 @@ export function FileAttachmentsButton({ lineItemId, onUpdate }: FileAttachmentsB
 
       {/* Dropdown menu */}
       {showFiles && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden flex flex-col">
+        <div className="absolute right-0 top-full mt-2 w-80 bg-gray-800 rounded-lg shadow-2xl border border-gray-700/50 z-50 max-h-96 overflow-hidden flex flex-col backdrop-blur-sm">
           {/* Header */}
-          <div className="flex items-center justify-between p-3 border-b border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-900">
+          <div className="flex items-center justify-between p-3 border-b border-gray-700/50">
+            <h3 className="text-sm font-semibold text-gray-200">
               Files ({fileCount})
             </h3>
             <div className="flex items-center gap-2">
@@ -132,14 +132,14 @@ export function FileAttachmentsButton({ lineItemId, onUpdate }: FileAttachmentsB
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="px-2 py-1 text-xs text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded transition-colors disabled:opacity-50"
+                className="px-2 py-1 text-xs text-primary-400 hover:text-primary-300 hover:bg-primary-500/10 rounded transition-colors disabled:opacity-50"
               >
                 {uploading ? 'Uploading...' : '+ Add'}
               </button>
               <button
                 type="button"
                 onClick={() => setShowFiles(false)}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -158,9 +158,9 @@ export function FileAttachmentsButton({ lineItemId, onUpdate }: FileAttachmentsB
           {/* Files list */}
           <div className="overflow-y-auto flex-1">
             {loading ? (
-              <div className="p-4 text-center text-xs text-gray-500">Loading files...</div>
+              <div className="p-4 text-center text-xs text-gray-400">Loading files...</div>
             ) : fileCount === 0 ? (
-              <div className="p-4 text-center text-xs text-gray-500">
+              <div className="p-4 text-center text-xs text-gray-400">
                 No files attached. Click "+ Add" to upload files.
               </div>
             ) : (
@@ -168,15 +168,15 @@ export function FileAttachmentsButton({ lineItemId, onUpdate }: FileAttachmentsB
                 {documents.map((doc, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors group"
+                    className="flex items-center justify-between p-2 bg-gray-700/30 rounded hover:bg-gray-700/50 transition-colors group"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <File className="w-4 h-4 text-gray-400 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium text-gray-900 truncate" title={doc.name}>
+                        <div className="text-xs font-medium text-gray-200 truncate" title={doc.name}>
                           {doc.name}
                         </div>
-                        <div className="text-[10px] text-gray-500">
+                        <div className="text-[10px] text-gray-400">
                           {formatFileSize(doc.size)}
                         </div>
                       </div>
@@ -186,7 +186,7 @@ export function FileAttachmentsButton({ lineItemId, onUpdate }: FileAttachmentsB
                         href={getFileUrl(doc.filename)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1.5 text-gray-600 hover:text-primary-600 transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-primary-400 transition-colors"
                         title="View file"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -195,7 +195,7 @@ export function FileAttachmentsButton({ lineItemId, onUpdate }: FileAttachmentsB
                       <button
                         type="button"
                         onClick={() => handleDelete(index)}
-                        className="p-1.5 text-gray-600 hover:text-red-600 transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
                         title="Delete file"
                       >
                         <Trash2 className="w-4 h-4" />

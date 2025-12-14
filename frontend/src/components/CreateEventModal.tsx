@@ -214,22 +214,23 @@ export function CreateEventModal({ onClose, onSave }: CreateEventModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold gradient-text">Create New Event</h2>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content max-w-4xl" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title gradient-text">Create New Event</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-200 transition-colors p-1 rounded-lg hover:bg-gray-700/50"
+            aria-label="Close modal"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="modal-body space-y-6">
           {/* Banner Image */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Banner Image</label>
+            <label className="label">Banner Image</label>
             {bannerPreview ? (
               <div className="space-y-3">
                 <img
@@ -297,7 +298,7 @@ export function CreateEventModal({ onClose, onSave }: CreateEventModalProps) {
 
           {/* Event */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">Event</h3>
+            <h3 className="text-lg font-semibold text-gray-200 border-b border-gray-700/50 pb-2 mb-4">Event</h3>
             <div className="space-y-4">
               <div>
                 <label className="label">Event Name *</label>
@@ -532,7 +533,7 @@ export function CreateEventModal({ onClose, onSave }: CreateEventModalProps) {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 justify-end pt-4 border-t">
+          <div className="flex gap-3 justify-end pt-6 border-t border-gray-700/50">
             <button
               type="button"
               onClick={onClose}

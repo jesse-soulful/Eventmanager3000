@@ -235,13 +235,13 @@ export function FinanceBoardPage() {
       const hasChildren = group.children && group.children.size > 0;
 
       elements.push(
-        <tr key={groupKey} className="bg-gray-50">
+        <tr key={groupKey} className="bg-gray-800/60">
           <td colSpan={hasChildren ? totalCols : 1} className="px-6 py-3">
             <div className="flex items-center" style={{ paddingLeft: `${level * 1.5}rem` }}>
               {hasChildren && (
                 <button
                   onClick={() => toggleGroup(groupKey)}
-                  className="mr-2 p-1 hover:bg-gray-200 rounded"
+                  className="mr-2 p-1 hover:bg-gray-700 rounded text-gray-300 hover:text-gray-100 transition-colors"
                 >
                   {isExpanded ? (
                     <ChevronDown className="w-4 h-4" />
@@ -250,8 +250,8 @@ export function FinanceBoardPage() {
                   )}
                 </button>
               )}
-              <span className="font-semibold text-gray-900">{group.label}</span>
-              <span className="ml-2 text-sm text-gray-500">({group.items.length} items)</span>
+              <span className="font-semibold text-gray-100">{group.label}</span>
+              <span className="ml-2 text-sm text-gray-400">({group.items.length} items)</span>
             </div>
           </td>
           {!hasChildren && (
@@ -259,14 +259,14 @@ export function FinanceBoardPage() {
               {!eventId && <td className="px-6 py-3 text-sm text-gray-500">-</td>}
               <td className="px-6 py-3 text-sm text-gray-500">-</td>
               <td className="px-6 py-3 text-sm text-gray-500">-</td>
-              <td className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+              <td className="px-6 py-3 text-right text-sm font-semibold text-gray-100">
                 {formatCurrency(group.totals.estimated)}
               </td>
-              <td className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+              <td className="px-6 py-3 text-right text-sm font-semibold text-gray-100">
                 {formatCurrency(group.totals.actual)}
               </td>
-              <td className={`px-6 py-3 text-right text-sm font-medium ${
-                group.totals.variance >= 0 ? 'text-red-600' : 'text-green-600'
+              <td className={`px-6 py-3 text-right text-sm font-semibold ${
+                group.totals.variance >= 0 ? 'text-red-300' : 'text-emerald-300'
               }`}>
                 {formatCurrency(group.totals.variance)}
               </td>
@@ -297,46 +297,46 @@ export function FinanceBoardPage() {
     const variance = actual - estimated;
 
     return (
-      <tr key={item.id} className={item.isSubLineItem ? 'bg-gray-50' : ''}>
+      <tr key={item.id} className={`hover:bg-gray-800/50 transition-colors ${item.isSubLineItem ? 'bg-gray-800/40' : ''}`}>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex items-center">
-            {item.isSubLineItem && <span className="mr-2 text-gray-400">└─</span>}
+            {item.isSubLineItem && <span className="mr-2 text-gray-500">└─</span>}
             <div
               className="w-3 h-3 rounded-full mr-2"
               style={{ backgroundColor: MODULE_COLORS[item.moduleType] }}
             />
-            <span className="text-sm text-gray-900">{item.moduleName}</span>
+            <span className="text-sm text-gray-100">{item.moduleName}</span>
           </div>
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
           {item.isSubLineItem && item.parentLineItemName && (
-            <span className="text-gray-400 mr-1">{item.parentLineItemName} → </span>
+            <span className="text-gray-500 mr-1">{item.parentLineItemName} → </span>
           )}
           {item.lineItemName}
         </td>
         {!eventId && (
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
             {item.eventName || item.eventId}
           </td>
         )}
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {item.categoryName || '-'}
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+          {item.categoryName || <span className="text-gray-500">-</span>}
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {item.statusName || '-'}
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+          {item.statusName || <span className="text-gray-500">-</span>}
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-100">
           {formatCurrency(estimated)}
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-100">
           {formatCurrency(actual)}
         </td>
-        <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${
-          variance >= 0 ? 'text-red-600' : 'text-green-600'
+        <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-semibold ${
+          variance >= 0 ? 'text-red-300' : 'text-emerald-300'
         }`}>
           {formatCurrency(variance)}
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
           {format(new Date(item.date), 'MMM d, yyyy')}
         </td>
       </tr>
@@ -344,11 +344,11 @@ export function FinanceBoardPage() {
   };
 
   if (loading) {
-    return <div className="text-center py-12">Loading finance data...</div>;
+    return <div className="text-center py-12 text-gray-400">Loading finance data...</div>;
   }
 
   if (!summary) {
-    return <div className="text-center py-12">Finance data not found</div>;
+    return <div className="text-center py-12 text-gray-400">Finance data not found</div>;
   }
 
   const totalEstimated = summary.totalEstimated ?? summary.totalBudget ?? 0;
@@ -358,26 +358,17 @@ export function FinanceBoardPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        {eventId && (
-        <Link
-          to={`/events/${eventId}`}
-          className="inline-flex items-center text-gray-600 hover:text-primary-600 mb-6 font-medium transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Event
-        </Link>
-        )}
+      <div className="page-header">
         <div className="flex items-center justify-between">
           <div>
-        <h1 className="text-4xl font-bold gradient-text mb-2">Finance Board</h1>
-            <p className="text-gray-600 text-lg">
+            <h1 className="page-title">Finance Board</h1>
+            <p className="page-subtitle">
               {eventId ? 'Financial overview and breakdown' : 'Cross-event financial overview'}
             </p>
           </div>
           <button
             onClick={loadData}
-            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="flex items-center px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
@@ -388,8 +379,8 @@ export function FinanceBoardPage() {
       {/* Filters */}
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Filter className="w-5 h-5 mr-2" />
+          <h2 className="text-lg font-semibold text-gray-100 flex items-center">
+            <Filter className="w-5 h-5 mr-2 text-gray-400" />
             Filters
           </h2>
           <button
@@ -400,7 +391,7 @@ export function FinanceBoardPage() {
               setSelectedModules([]);
               setIncludeSubItems(false);
             }}
-            className="text-sm text-gray-600 hover:text-gray-900"
+            className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
           >
             Clear All
           </button>
@@ -409,7 +400,7 @@ export function FinanceBoardPage() {
           {/* Event Filter */}
           {!eventId && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Events</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">Events</label>
               <select
                 multiple
                 value={selectedEventIds}
@@ -417,7 +408,7 @@ export function FinanceBoardPage() {
                   const values = Array.from(e.target.selectedOptions, option => option.value);
                   setSelectedEventIds(values);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 size={3}
               >
                 {events.map(event => (
@@ -431,27 +422,27 @@ export function FinanceBoardPage() {
 
           {/* Date Range */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Start Date</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="w-full px-3 py-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">End Date</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="w-full px-3 py-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
 
           {/* Module Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Modules</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Modules</label>
             <select
               multiple
               value={selectedModules}
@@ -459,7 +450,7 @@ export function FinanceBoardPage() {
                 const values = Array.from(e.target.selectedOptions, option => option.value) as ModuleType[];
                 setSelectedModules(values);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="w-full px-3 py-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
               size={3}
             >
               {Object.values(ModuleTypeEnum).map(moduleType => (
@@ -477,9 +468,9 @@ export function FinanceBoardPage() {
               id="includeSubItems"
               checked={includeSubItems}
               onChange={(e) => setIncludeSubItems(e.target.checked)}
-              className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+              className="w-4 h-4 text-primary-500 border-gray-600 rounded focus:ring-primary-500 bg-gray-800"
             />
-            <label htmlFor="includeSubItems" className="ml-2 text-sm font-medium text-gray-700">
+            <label htmlFor="includeSubItems" className="ml-2 text-sm font-medium text-gray-300">
               Include Sub-Line Items
             </label>
           </div>
@@ -487,24 +478,24 @@ export function FinanceBoardPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
+      <div className="border-b border-gray-700 mb-6">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('summary')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+            className={`py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
               activeTab === 'summary'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
             }`}
           >
             Summary
           </button>
           <button
             onClick={() => setActiveTab('details')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+            className={`py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
               activeTab === 'details'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
             }`}
           >
             Line Items
@@ -516,11 +507,11 @@ export function FinanceBoardPage() {
         <div className="space-y-6">
           {/* Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <div className="card bg-gradient-to-br from-blue-500/10 to-blue-600/10 border-blue-500/30">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Estimated</p>
-                  <p className="text-3xl font-bold text-blue-900 mt-2">
+                  <p className="text-sm font-semibold text-blue-400 uppercase tracking-wide">Estimated</p>
+                  <p className="text-3xl font-bold text-blue-300 mt-2">
                     {formatCurrency(totalEstimated)}
                   </p>
                 </div>
@@ -529,11 +520,11 @@ export function FinanceBoardPage() {
                 </div>
               </div>
             </div>
-            <div className="card bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+            <div className="card bg-gradient-to-br from-red-500/10 to-red-600/10 border-red-500/30">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-red-700 uppercase tracking-wide">Actual</p>
-                  <p className="text-3xl font-bold text-red-900 mt-2">
+                  <p className="text-sm font-semibold text-red-400 uppercase tracking-wide">Actual</p>
+                  <p className="text-3xl font-bold text-red-300 mt-2">
                     {formatCurrency(totalActual)}
                   </p>
                 </div>
@@ -544,32 +535,32 @@ export function FinanceBoardPage() {
             </div>
             <div className={`card bg-gradient-to-br ${
               variance >= 0 
-                ? 'from-yellow-50 to-yellow-100 border-yellow-200' 
-                : 'from-green-50 to-green-100 border-green-200'
+                ? 'from-yellow-500/10 to-yellow-600/10 border-yellow-500/30' 
+                : 'from-emerald-500/10 to-emerald-600/10 border-emerald-500/30'
             }`}>
               <div className="flex items-center justify-between">
                 <div>
                   <p className={`text-sm font-semibold uppercase tracking-wide ${
-                    variance >= 0 ? 'text-yellow-700' : 'text-green-700'
+                    variance >= 0 ? 'text-yellow-400' : 'text-emerald-400'
                   }`}>Variance</p>
                   <p className={`text-3xl font-bold mt-2 ${
-                    variance >= 0 ? 'text-yellow-900' : 'text-green-900'
+                    variance >= 0 ? 'text-yellow-300' : 'text-emerald-300'
                   }`}>
                     {formatCurrency(variance)}
                   </p>
                 </div>
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
-                  variance >= 0 ? 'bg-yellow-500' : 'bg-green-500'
+                  variance >= 0 ? 'bg-yellow-500' : 'bg-emerald-500'
                 }`}>
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
               </div>
             </div>
-            <div className="card bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200">
+            <div className="card bg-gradient-to-br from-gray-500/10 to-gray-600/10 border-gray-500/30">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Remaining</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
+                  <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Remaining</p>
+                  <p className="text-3xl font-bold text-gray-300 mt-2">
                     {formatCurrency(totalEstimated - totalActual)}
                   </p>
                 </div>
@@ -582,46 +573,46 @@ export function FinanceBoardPage() {
 
           {/* By Module */}
           <div className="card">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">By Module</h2>
+            <h2 className="text-xl font-bold text-gray-100 mb-4">By Module</h2>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-gray-700">
+                <thead className="bg-gray-800/60">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Module</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Estimated</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actual</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Variance</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Remaining</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Items</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Module</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Estimated</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Actual</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Variance</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Remaining</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Items</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-gray-800/30 divide-y divide-gray-700">
                   {summary.byModule.map((module) => (
-                    <tr key={module.moduleType}>
+                    <tr key={module.moduleType} className="hover:bg-gray-800/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div
                             className="w-3 h-3 rounded-full mr-2"
                             style={{ backgroundColor: MODULE_COLORS[module.moduleType] }}
                           />
-                          <span className="text-sm font-medium text-gray-900">{module.moduleName}</span>
+                          <span className="text-sm font-medium text-gray-100">{module.moduleName}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-100">
                         {formatCurrency(module.totalEstimated ?? module.budget)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-100">
                         {formatCurrency(module.totalActual ?? 0)}
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${
-                        (module.variance ?? 0) >= 0 ? 'text-red-600' : 'text-green-600'
+                      <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-semibold ${
+                        (module.variance ?? 0) >= 0 ? 'text-red-300' : 'text-emerald-300'
                       }`}>
                         {formatCurrency(module.variance ?? 0)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-300">
                         {formatCurrency((module.totalEstimated ?? module.budget) - (module.totalActual ?? 0))}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-300">
                         {module.lineItemCount}
                       </td>
                     </tr>
@@ -634,25 +625,25 @@ export function FinanceBoardPage() {
           {/* By Category */}
           {summary.byCategory.length > 0 && (
             <div className="card">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">By Category</h2>
+              <h2 className="text-xl font-bold text-gray-100 mb-4">By Category</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {summary.byCategory.map((cat) => (
-                  <div key={cat.categoryId} className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900">{cat.categoryName}</h3>
+                  <div key={cat.categoryId} className="border border-gray-700 rounded-lg p-4 bg-gray-800/50 hover:bg-gray-800/70 transition-colors">
+                    <h3 className="font-semibold text-gray-100">{cat.categoryName}</h3>
                     <div className="mt-2 space-y-1">
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-lg font-semibold text-gray-200">
                         Est: {formatCurrency(cat.totalEstimated ?? cat.amount)}
                       </p>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-lg font-semibold text-gray-200">
                         Act: {formatCurrency(cat.totalActual ?? 0)}
                       </p>
                       <p className={`text-sm font-medium ${
-                        (cat.variance ?? 0) >= 0 ? 'text-red-600' : 'text-green-600'
+                        (cat.variance ?? 0) >= 0 ? 'text-red-300' : 'text-emerald-300'
                       }`}>
                         Var: {formatCurrency(cat.variance ?? 0)}
                       </p>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">{cat.lineItemCount} items</p>
+                    <p className="text-sm text-gray-400 mt-1">{cat.lineItemCount} items</p>
                   </div>
                 ))}
               </div>
@@ -662,40 +653,40 @@ export function FinanceBoardPage() {
           {/* By Event (cross-event only) */}
           {!eventId && summary.byEvent && summary.byEvent.length > 0 && (
             <div className="card">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">By Event</h2>
+              <h2 className="text-xl font-bold text-gray-100 mb-4">By Event</h2>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-700">
+                  <thead className="bg-gray-800/60">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date Range</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Estimated</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actual</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Variance</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Items</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Event</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Date Range</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Estimated</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Actual</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Variance</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Items</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-gray-800/30 divide-y divide-gray-700">
                     {summary.byEvent.map((event) => (
-                      <tr key={event.eventId}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={event.eventId} className="hover:bg-gray-800/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">
                           {event.eventName}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {format(event.startDate, 'MMM d')} - {format(event.endDate, 'MMM d, yyyy')}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-100">
                           {formatCurrency(event.totalEstimated)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-100">
                           {formatCurrency(event.totalActual)}
                         </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${
-                          event.variance >= 0 ? 'text-red-600' : 'text-green-600'
+                        <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-semibold ${
+                          event.variance >= 0 ? 'text-red-300' : 'text-emerald-300'
                         }`}>
                           {formatCurrency(event.variance)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-300">
                           {event.lineItemCount}
                         </td>
                       </tr>
@@ -710,7 +701,7 @@ export function FinanceBoardPage() {
         <div className="space-y-6">
           {/* Grouping Controls */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Group By</h2>
+            <h2 className="text-lg font-semibold text-gray-100 mb-4">Group By</h2>
             <div className="flex flex-wrap gap-2">
               {(['event', 'module', 'category', 'status'] as const).map((option) => {
                 if (eventId && option === 'event') return null;
@@ -725,10 +716,10 @@ export function FinanceBoardPage() {
                         setGroupBy([...groupBy, option]);
                       }
                     }}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                       index >= 0
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-primary-600 text-white hover:bg-primary-500'
+                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                     }`}
                   >
                     {option.charAt(0).toUpperCase() + option.slice(1)}
@@ -743,7 +734,7 @@ export function FinanceBoardPage() {
               {groupBy.length > 0 && (
                 <button
                   onClick={() => setGroupBy([])}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-300 hover:bg-gray-700 transition-colors"
                 >
                   Clear
                 </button>
@@ -752,25 +743,25 @@ export function FinanceBoardPage() {
           </div>
 
           {/* Line Items Table */}
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden p-0">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-800/60">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Module</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Line Item</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Module</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Line Item</th>
                     {!eventId && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Event</th>
                     )}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Estimated</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actual</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Variance</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Status</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Estimated</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Actual</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Variance</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Date</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-gray-800/30 divide-y divide-gray-700">
                   {groupedItems ? (
                     renderGroupedItems(groupedItems)
                   ) : (

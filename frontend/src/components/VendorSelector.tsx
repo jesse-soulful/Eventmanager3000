@@ -94,15 +94,15 @@ export function VendorSelector({
       {label && <label className="label">{label}</label>}
       <div className="relative">
         {value ? (
-          <div className="flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-gray-50">
+          <div className="flex items-center justify-between p-3 border border-gray-700 rounded-lg bg-gray-900/50">
             <div>
-              <div className="font-medium text-gray-900">{value.name}</div>
-              {value.description && <div className="text-sm text-gray-600">{value.description}</div>}
+              <div className="font-medium text-gray-200">{value.name}</div>
+              {value.description && <div className="text-sm text-gray-400">{value.description}</div>}
             </div>
             <button
               type="button"
               onClick={handleClear}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-300"
             >
               <X className="w-4 h-4" />
             </button>
@@ -125,7 +125,7 @@ export function VendorSelector({
         )}
 
         {showDropdown && !value && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-gray-500">Loading...</div>
             ) : searchQuery.length === 0 ? (
@@ -133,7 +133,7 @@ export function VendorSelector({
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(true)}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-600 hover:bg-primary-50 rounded-lg"
+                  className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-400 hover:bg-primary-500/10 rounded-lg"
                 >
                   <Plus className="w-4 h-4" />
                   Create new vendor
@@ -145,7 +145,7 @@ export function VendorSelector({
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(true)}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-600 hover:bg-primary-50 rounded-lg"
+                  className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-400 hover:bg-primary-500/10 rounded-lg"
                 >
                   <Plus className="w-4 h-4" />
                   Create "{searchQuery}"
@@ -158,17 +158,17 @@ export function VendorSelector({
                     key={vendor.id}
                     type="button"
                     onClick={() => handleSelect(vendor)}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                    className="w-full px-4 py-3 text-left hover:bg-gray-700 border-b border-gray-700 last:border-b-0"
                   >
-                    <div className="font-medium text-gray-900">{vendor.name}</div>
-                    {vendor.description && <div className="text-sm text-gray-600">{vendor.description}</div>}
+                    <div className="font-medium text-gray-200">{vendor.name}</div>
+                    {vendor.description && <div className="text-sm text-gray-400">{vendor.description}</div>}
                   </button>
                 ))}
-                <div className="border-t border-gray-200 p-2">
+                <div className="border-t border-gray-700 p-2">
                   <button
                     type="button"
                     onClick={() => setShowCreateForm(true)}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-600 hover:bg-primary-50 rounded-lg"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-left text-primary-400 hover:bg-primary-500/10 rounded-lg"
                   >
                     <Plus className="w-4 h-4" />
                     Create new vendor
@@ -180,8 +180,8 @@ export function VendorSelector({
         )}
 
         {showCreateForm && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4">
-            <h4 className="font-semibold mb-3">Create New Vendor</h4>
+          <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4">
+            <h4 className="font-semibold mb-3 text-gray-200">Create New Vendor</h4>
             <div className="space-y-3">
               <input
                 type="text"

@@ -70,13 +70,13 @@ export function UserManagement() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'ADMIN':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
       case 'USER':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'VIEWER':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-700 text-gray-400 border-gray-600';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-700 text-gray-400 border-gray-600';
     }
   };
 
@@ -95,48 +95,48 @@ export function UserManagement() {
   return (
     <div className="card">
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">User Management</h2>
-        <p className="text-sm text-gray-600">Manage users and their roles</p>
+        <h2 className="text-xl font-bold text-gray-200 mb-2">User Management</h2>
+        <p className="text-sm text-gray-400">Manage users and their roles</p>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-dark-700">
+          <thead className="bg-gray-900/50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 User
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Role
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Created
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-gray-800/30 divide-y divide-dark-700">
             {users.map((user) => {
               const isCurrentUser = currentUser?.id === user.id;
               const isEditing = editingRole?.userId === user.id;
 
               return (
-                <tr key={user.id} className="hover:bg-gray-50">
+                <tr key={user.id} className="hover:bg-gray-800/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-200">
                       {user.name || 'No name'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{user.email}</div>
+                    <div className="text-sm text-gray-300">{user.email}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {isEditing ? (
@@ -153,7 +153,7 @@ export function UserManagement() {
                             setEditingRole(null);
                           }
                         }}
-                        className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        className="text-sm border border-gray-700 bg-gray-900/50 text-gray-100 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500"
                         autoFocus
                       >
                         <option value="VIEWER">Viewer</option>
@@ -178,28 +178,28 @@ export function UserManagement() {
                     <span
                       className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                         user.emailVerified
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
+                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                          : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                       }`}
                     >
                       {user.emailVerified ? 'Verified' : 'Unverified'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     {!isCurrentUser && (
                       <button
                         onClick={() => handleDeleteUser(user.id, user.email)}
-                        className="text-red-600 hover:text-red-900 inline-flex items-center gap-1"
+                        className="text-red-400 hover:text-red-300 inline-flex items-center gap-1 transition-colors"
                         title="Delete user"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
                     {isCurrentUser && (
-                      <span className="text-gray-400 text-xs">Current user</span>
+                      <span className="text-gray-500 text-xs">Current user</span>
                     )}
                   </td>
                 </tr>

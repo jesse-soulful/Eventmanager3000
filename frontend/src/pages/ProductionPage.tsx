@@ -632,8 +632,8 @@ export function ProductionPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 mb-6">
             <Plus className="w-10 h-10 text-primary-600" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">No categories yet</h3>
-          <p className="text-gray-500 mb-6">Get started by adding your first category</p>
+          <h3 className="text-2xl font-bold text-gray-200 mb-2">No categories yet</h3>
+          <p className="text-gray-400 mb-6">Get started by adding your first category</p>
           <button onClick={() => setShowCreateCategoryModal(true)} className="btn btn-primary">
             Add First Category
           </button>
@@ -661,13 +661,13 @@ export function ProductionPage() {
             });
 
             return (
-              <div key={category.id} className="card">
+              <div key={category.id} className="line-item-card">
                 {/* Top Row: Category Name + Budget Overview + Actions */}
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="line-item-header">
+                  <div className="line-item-content flex items-center gap-3">
                     <button
                       onClick={() => toggleExpand(category.id)}
-                      className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                      className="text-gray-300 hover:text-gray-100 hover:bg-gray-700 rounded-lg p-1.5 transition-all flex-shrink-0 border border-transparent hover:border-gray-600"
                     >
                       {isExpanded ? (
                         <ChevronDown className="w-5 h-5" />
@@ -679,7 +679,7 @@ export function ProductionPage() {
                       className="w-4 h-4 rounded-full flex-shrink-0"
                       style={{ backgroundColor: category.color || '#6B7280' }}
                     />
-                    <h3 className="text-xl font-bold text-gray-900 flex-shrink-0">
+                    <h3 className="line-item-title">
                       {category.name}
                     </h3>
                     
@@ -710,22 +710,22 @@ export function ProductionPage() {
 
                   {/* Budget Summary */}
                   <div className="flex items-center gap-6 flex-shrink-0">
-                    <div className="text-right">
-                      <div className="text-xs text-gray-500 mb-1">Planned</div>
-                      <div className="text-sm font-semibold text-blue-600">
+                    <div className="budget-value">
+                      <div className="budget-label">Planned</div>
+                      <div className="text-base font-bold text-blue-400">
                         {formatCurrency(category.plannedTotal)}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xs text-gray-500 mb-1">Actual</div>
-                      <div className="text-sm font-semibold text-green-600">
+                    <div className="budget-value">
+                      <div className="budget-label">Actual</div>
+                      <div className="text-base font-bold text-emerald-400">
                         {formatCurrency(category.actualTotal)}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xs text-gray-500 mb-1">Variance</div>
-                      <div className={`text-sm font-semibold flex items-center gap-1 ${
-                        category.variance >= 0 ? 'text-red-600' : 'text-green-600'
+                    <div className="budget-value">
+                      <div className="budget-label">Variance</div>
+                      <div className={`text-base font-bold flex items-center gap-1 ${
+                        category.variance >= 0 ? 'text-red-300' : 'text-emerald-300'
                       }`}>
                         {category.variance >= 0 ? (
                           <TrendingUp className="w-4 h-4" />
@@ -738,14 +738,14 @@ export function ProductionPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 flex-shrink-0">
+                  <div className="line-item-actions">
                     {category.id !== 'uncategorized' && (
                       <button
                         onClick={() => {
                           setEditingCategory(category);
                           setShowCreateCategoryModal(true);
                         }}
-                        className="btn btn-secondary btn-sm"
+                        className="action-btn-primary"
                         title="Edit category"
                       >
                         <Edit2 className="w-4 h-4" />
@@ -754,7 +754,7 @@ export function ProductionPage() {
                     {category.id !== 'uncategorized' && (
                       <button
                         onClick={() => handleDeleteCategory(category.id)}
-                        className="btn btn-danger btn-sm"
+                        className="action-btn-danger"
                         title="Delete category"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -765,7 +765,7 @@ export function ProductionPage() {
 
                 {/* Bottom Section: Production Items */}
                 {isExpanded && (
-                  <div className="border-t border-gray-200 pt-4">
+                  <div className="border-t border-gray-700 pt-4">
                     {subItems.length === 0 ? (
                       <div className="text-center py-8 text-gray-500 text-sm">
                         No production items yet.
@@ -792,13 +792,13 @@ export function ProductionPage() {
                           const itemActualTotal = (item.actualCost || 0) + itemSubItems.reduce((sum, sub) => sum + (sub.actualCost || 0), 0);
                           
                           return (
-                            <div key={item.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div key={item.id} className="sub-item-card">
                               {/* Production Item Header */}
-                              <div className="flex items-start justify-between gap-4 mb-2">
+                              <div className="sub-item-header">
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                   <button
                                     onClick={() => toggleItemExpand(item.id)}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                                    className="text-gray-300 hover:text-gray-100 hover:bg-gray-700 rounded-lg p-1 transition-all flex-shrink-0 border border-transparent hover:border-gray-600"
                                   >
                                     {isItemExpanded ? (
                                       <ChevronDown className="w-4 h-4" />
@@ -806,7 +806,7 @@ export function ProductionPage() {
                                       <ChevronRight className="w-4 h-4" />
                                     )}
                                   </button>
-                                  <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                                  <h4 className="font-semibold text-gray-100">{item.name}</h4>
                                   <StatusDropdown
                                     statuses={mainStatuses}
                                     currentStatus={item.status || null}
@@ -814,44 +814,48 @@ export function ProductionPage() {
                                     size="sm"
                                   />
                                 </div>
-                                <div className="flex items-center gap-4 text-sm flex-shrink-0">
-                                  <div>
-                                    <span className="text-gray-500">Planned: </span>
+                                <div className="sub-item-budget-section">
+                                  <div className="budget-value">
+                                    <div className="budget-label">Planned</div>
                                     <InlineAmountInput
                                       value={item.plannedCost}
                                       onSave={(value) => handlePlannedCostChange(item.id, value)}
                                       color="blue"
+                                      className="text-sm font-semibold"
                                     />
                                   </div>
-                                  <div>
-                                    <span className="text-gray-500">Actual: </span>
+                                  <div className="budget-value">
+                                    <div className="budget-label">Actual</div>
                                     <InlineAmountInput
                                       value={item.actualCost}
                                       onSave={(value) => handleActualCostChange(item.id, value)}
                                       color="green"
+                                      className="text-sm font-semibold"
                                     />
                                   </div>
                                 </div>
-                                <div className="flex gap-1 flex-shrink-0">
-                                  <FileAttachmentsButton lineItemId={item.id} />
+                                <div className="line-item-actions">
+                                  <FileAttachmentsButton lineItemId={item.id} onUpdate={loadData} />
                                   <button
                                     onClick={() => {
                                       setCommentsLineItemId(item.id);
                                       setCommentsLineItemName(item.name);
                                       setShowCommentsModal(true);
                                     }}
-                                    className="btn btn-secondary btn-sm relative"
+                                    className="relative action-btn-primary"
+                                    title="View comments"
                                   >
                                     <MessageSquare className="w-4 h-4" />
                                     {itemCommentCount > 0 && (
-                                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                      <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
                                         {itemCommentCount}
                                       </span>
                                     )}
                                   </button>
                                   <button
                                     onClick={() => handleDeleteSubItem(item.id)}
-                                    className="btn btn-danger btn-sm"
+                                    className="action-btn-danger"
+                                    title="Delete"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -859,21 +863,22 @@ export function ProductionPage() {
                               </div>
                               
                               {/* Description */}
-                              <div className="mb-2">
+                              <div className="sub-item-notes">
+                                <div className="sub-item-notes-label">Notes:</div>
                                 <InlineTextInput
                                   value={item.description || ''}
                                   onSave={(value) => handleDescriptionChange(item.id, value)}
                                   placeholder="Click to add description..."
                                   multiline
-                                  className="text-sm text-gray-600 w-full"
+                                  className="text-sm text-gray-300 w-full"
                                 />
                               </div>
                               
                               {/* Sub-line Items */}
                               {isItemExpanded && (
-                                <div className="ml-6 mt-3 pt-3 border-t border-gray-300">
+                                <div className="ml-6 mt-3 pt-3 section-divider">
                                   {itemSubItems.length === 0 ? (
-                                    <div className="text-sm text-gray-500 py-2">
+                                    <div className="text-sm text-gray-400 py-2">
                                       No sub-items yet.{' '}
                                       <button
                                         onClick={() => {
@@ -881,7 +886,7 @@ export function ProductionPage() {
                                           setEditingSubItem(null);
                                           setShowCreateSubItemModal(true);
                                         }}
-                                        className="text-primary-600 hover:text-primary-800 font-medium"
+                                        className="text-primary-400 hover:text-primary-300 font-medium transition-colors"
                                       >
                                         Add sub-item
                                       </button>
@@ -891,11 +896,11 @@ export function ProductionPage() {
                                       {itemSubItems.map((subItem) => {
                                         const subCommentCount = commentCounts.get(subItem.id) || 0;
                                         return (
-                                          <div key={subItem.id} className="bg-white rounded p-3 border border-gray-200">
-                                            <div className="flex items-start justify-between gap-4">
-                                              <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                  <h5 className="text-sm font-medium text-gray-900">{subItem.name}</h5>
+                                          <div key={subItem.id} className="sub-item-card bg-gray-800/40">
+                                            <div className="sub-item-content">
+                                              <div className="sub-item-header">
+                                                <div className="sub-item-name-section">
+                                                  <h5 className="text-sm font-semibold text-gray-100">{subItem.name}</h5>
                                                   <StatusDropdown
                                                     statuses={subStatuses}
                                                     currentStatus={subItem.status || null}
@@ -907,13 +912,13 @@ export function ProductionPage() {
                                                     const metadata = (subItem.metadata as any) || {};
                                                     if (metadata.vendorId) {
                                                       return (
-                                                        <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">
+                                                        <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-full">
                                                           Rental: {metadata.vendorName || 'Vendor'}
                                                         </span>
                                                       );
                                                     } else if (metadata.materialId) {
                                                       return (
-                                                        <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                                                        <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full">
                                                           Owned: {metadata.materialName || 'Material'}
                                                         </span>
                                                       );
@@ -921,62 +926,70 @@ export function ProductionPage() {
                                                     return null;
                                                   })()}
                                                 </div>
-                                                {subItem.description && (
-                                                  <p className="text-xs text-gray-600 mb-2">{subItem.description}</p>
-                                                )}
-                                                <div className="flex items-center gap-4 text-xs">
-                                                  <div>
-                                                    <span className="text-gray-500">Planned: </span>
+                                                <div className="sub-item-budget-section">
+                                                  <div className="budget-value">
+                                                    <div className="budget-label">Planned</div>
                                                     <InlineAmountInput
                                                       value={subItem.plannedCost}
                                                       onSave={(value) => handlePlannedCostChange(subItem.id, value)}
                                                       color="blue"
+                                                      className="text-xs font-semibold"
                                                     />
                                                   </div>
-                                                  <div>
-                                                    <span className="text-gray-500">Actual: </span>
+                                                  <div className="budget-value">
+                                                    <div className="budget-label">Actual</div>
                                                     <InlineAmountInput
                                                       value={subItem.actualCost}
                                                       onSave={(value) => handleActualCostChange(subItem.id, value)}
                                                       color="green"
+                                                      className="text-xs font-semibold"
                                                     />
                                                   </div>
                                                 </div>
                                               </div>
-                                              <div className="flex gap-1">
-                                                <FileAttachmentsButton lineItemId={subItem.id} />
-                                                <button
-                                                  onClick={() => {
-                                                    setCommentsLineItemId(subItem.id);
-                                                    setCommentsLineItemName(subItem.name);
-                                                    setShowCommentsModal(true);
-                                                  }}
-                                                  className="btn btn-secondary btn-xs relative"
-                                                >
-                                                  <MessageSquare className="w-3 h-3" />
-                                                  {subCommentCount > 0 && (
-                                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
-                                                      {subCommentCount}
-                                                    </span>
-                                                  )}
-                                                </button>
-                                                <button
-                                                  onClick={() => {
-                                                    setParentItemId(item.id);
-                                                    setEditingSubItem(subItem);
-                                                    setShowCreateSubItemModal(true);
-                                                  }}
-                                                  className="btn btn-secondary btn-xs"
-                                                >
-                                                  <Edit2 className="w-3 h-3" />
-                                                </button>
-                                                <button
-                                                  onClick={() => handleDeleteSubItem(subItem.id)}
-                                                  className="btn btn-danger btn-xs"
-                                                >
-                                                  <Trash2 className="w-3 h-3" />
-                                                </button>
-                                              </div>
+                                              {subItem.description && (
+                                                <div className="sub-item-notes">
+                                                  <div className="sub-item-notes-label">Notes:</div>
+                                                  <p className="text-xs text-gray-300">{subItem.description}</p>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <div className="line-item-actions">
+                                              <FileAttachmentsButton lineItemId={subItem.id} onUpdate={loadData} />
+                                              <button
+                                                onClick={() => {
+                                                  setCommentsLineItemId(subItem.id);
+                                                  setCommentsLineItemName(subItem.name);
+                                                  setShowCommentsModal(true);
+                                                }}
+                                                className="relative action-btn-primary"
+                                                title="View comments"
+                                              >
+                                                <MessageSquare className="w-4 h-4" />
+                                                {subCommentCount > 0 && (
+                                                  <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                                                    {subCommentCount}
+                                                  </span>
+                                                )}
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  setParentItemId(item.id);
+                                                  setEditingSubItem(subItem);
+                                                  setShowCreateSubItemModal(true);
+                                                }}
+                                                className="action-btn-primary"
+                                                title="Edit"
+                                              >
+                                                <Edit2 className="w-4 h-4" />
+                                              </button>
+                                              <button
+                                                onClick={() => handleDeleteSubItem(subItem.id)}
+                                                className="action-btn-danger"
+                                                title="Delete"
+                                              >
+                                                <Trash2 className="w-4 h-4" />
+                                              </button>
                                             </div>
                                           </div>
                                         );

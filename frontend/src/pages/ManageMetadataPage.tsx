@@ -287,14 +287,14 @@ export function ManageMetadataPage() {
   };
 
   if (loading) {
-    return <div className="text-center py-12">Loading...</div>;
+    return <div className="text-center py-12 text-gray-400">Loading...</div>;
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold gradient-text mb-2">Manage Metadata</h1>
-        <p className="text-gray-600">Manage statuses, categories, and tags for line items</p>
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">Manage Metadata</h1>
+        <p className="page-subtitle">Manage statuses, categories, and tags for line items</p>
       </div>
 
       {/* Module Selector - Hidden for Users tab */}
@@ -306,11 +306,11 @@ export function ManageMetadataPage() {
               <button
                 key={moduleType}
                 onClick={() => setSelectedModule(moduleType)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  selectedModule === moduleType
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectedModule === moduleType
+                  ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700'
+              }`}
               >
                 {MODULE_DISPLAY_NAMES[moduleType]}
               </button>
@@ -320,13 +320,13 @@ export function ManageMetadataPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200">
+      <div className="flex gap-2 mb-6 border-b border-gray-700">
         <button
           onClick={() => setActiveTab('statuses')}
           className={`px-4 py-2 font-medium border-b-2 transition-colors ${
             activeTab === 'statuses'
-              ? 'border-primary-600 text-primary-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'border-primary-500 text-primary-400'
+              : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
           Statuses ({mainStatuses.length + subStatuses.length})
@@ -335,8 +335,8 @@ export function ManageMetadataPage() {
           onClick={() => setActiveTab('categories')}
           className={`px-4 py-2 font-medium border-b-2 transition-colors ${
             activeTab === 'categories'
-              ? 'border-primary-600 text-primary-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'border-primary-500 text-primary-400'
+              : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
           Categories ({categories.length})
@@ -345,8 +345,8 @@ export function ManageMetadataPage() {
           onClick={() => setActiveTab('tags')}
           className={`px-4 py-2 font-medium border-b-2 transition-colors ${
             activeTab === 'tags'
-              ? 'border-primary-600 text-primary-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'border-primary-500 text-primary-400'
+              : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
           Tags ({tags.length})
@@ -355,8 +355,8 @@ export function ManageMetadataPage() {
           onClick={() => setActiveTab('subLineItemTypes')}
           className={`px-4 py-2 font-medium border-b-2 transition-colors ${
             activeTab === 'subLineItemTypes'
-              ? 'border-primary-600 text-primary-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'border-primary-500 text-primary-400'
+              : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
           Sub-Line Item Types ({subLineItemTypes.length})
@@ -366,8 +366,8 @@ export function ManageMetadataPage() {
             onClick={() => setActiveTab('users')}
             className={`px-4 py-2 font-medium border-b-2 transition-colors ${
               activeTab === 'users'
-                ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+                ? 'border-primary-500 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-200'
             }`}
           >
             Users
@@ -382,8 +382,8 @@ export function ManageMetadataPage() {
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Main Line Item Statuses</h2>
-                <p className="text-sm text-gray-500 mt-1">Statuses for general line items (e.g., "Draft", "Approved", "Completed")</p>
+                <h2 className="text-xl font-bold text-gray-200">Main Line Item Statuses</h2>
+                <p className="text-sm text-gray-400 mt-1">Statuses for general line items (e.g., "Draft", "Approved", "Completed")</p>
               </div>
               <button onClick={() => handleCreateStatus('main')} className="btn btn-primary">
                 <Plus className="w-4 h-4 mr-2" />
@@ -392,36 +392,36 @@ export function ManageMetadataPage() {
             </div>
             <div className="space-y-2">
               {mainStatuses.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No main statuses yet. Create one to get started.</p>
+                <p className="text-gray-400 text-center py-8">No main statuses yet. Create one to get started.</p>
               ) : (
                 mainStatuses.map((status) => (
                   <div
                     key={status.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="sub-item-card"
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-4 h-4 rounded-full"
+                        className="w-4 h-4 rounded-full shadow-sm"
                         style={{ backgroundColor: status.color }}
                       />
-                      <span className="font-medium text-gray-900">{status.name}</span>
+                      <span className="font-semibold text-gray-100">{status.name}</span>
                       {status.isDefault && (
-                        <span className="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded">
+                        <span className="px-2.5 py-1 text-xs font-semibold bg-primary-500/20 text-primary-300 border border-primary-500/30 rounded-full">
                           Default
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="line-item-actions">
                       <button
                         onClick={() => handleUpdateStatus(status)}
-                        className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                        className="action-btn-primary"
                         title="Edit"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteStatus(status.id)}
-                        className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                        className="action-btn-danger"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -437,8 +437,8 @@ export function ManageMetadataPage() {
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Sub-Line Item Statuses</h2>
-                <p className="text-sm text-gray-500 mt-1">Statuses for to-do list items (e.g., "To Do", "In Progress", "Done")</p>
+                <h2 className="text-xl font-bold text-gray-200">Sub-Line Item Statuses</h2>
+                <p className="text-sm text-gray-400 mt-1">Statuses for to-do list items (e.g., "To Do", "In Progress", "Done")</p>
               </div>
               <button onClick={() => handleCreateStatus('sub')} className="btn btn-primary">
                 <Plus className="w-4 h-4 mr-2" />
@@ -447,36 +447,36 @@ export function ManageMetadataPage() {
             </div>
             <div className="space-y-2">
               {subStatuses.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No sub statuses yet. Create one to get started.</p>
+                <p className="text-gray-400 text-center py-8">No sub statuses yet. Create one to get started.</p>
               ) : (
                 subStatuses.map((status) => (
                   <div
                     key={status.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="sub-item-card"
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-4 h-4 rounded-full"
+                        className="w-4 h-4 rounded-full shadow-sm"
                         style={{ backgroundColor: status.color }}
                       />
-                      <span className="font-medium text-gray-900">{status.name}</span>
+                      <span className="font-semibold text-gray-100">{status.name}</span>
                       {status.isDefault && (
-                        <span className="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded">
+                        <span className="px-2.5 py-1 text-xs font-semibold bg-primary-500/20 text-primary-300 border border-primary-500/30 rounded-full">
                           Default
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="line-item-actions">
                       <button
                         onClick={() => handleUpdateStatus(status)}
-                        className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                        className="action-btn-primary"
                         title="Edit"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteStatus(status.id)}
-                        className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                        className="action-btn-danger"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -494,7 +494,7 @@ export function ManageMetadataPage() {
       {activeTab === 'categories' && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Categories</h2>
+            <h2 className="text-xl font-bold text-gray-200">Categories</h2>
             <button onClick={handleCreateCategory} className="btn btn-primary">
               <Plus className="w-4 h-4 mr-2" />
               Add Category
@@ -502,30 +502,30 @@ export function ManageMetadataPage() {
           </div>
           <div className="space-y-2">
             {categories.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No categories yet. Create one to get started.</p>
+              <p className="text-gray-400 text-center py-8">No categories yet. Create one to get started.</p>
             ) : (
               categories.map((category) => (
                 <div
                   key={category.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="sub-item-card"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
                     <div
-                      className="w-4 h-4 rounded-full"
+                      className="w-4 h-4 rounded-full shadow-sm"
                       style={{ backgroundColor: category.color }}
                     />
-                    <span className="font-medium text-gray-900">{category.name}</span>
+                    <span className="font-semibold text-gray-100">{category.name}</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="line-item-actions">
                     <button
                       onClick={() => handleUpdateCategory(category)}
-                      className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                      className="action-btn-primary"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteCategory(category.id)}
-                      className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                      className="action-btn-danger"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -541,7 +541,7 @@ export function ManageMetadataPage() {
       {activeTab === 'tags' && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Tags</h2>
+            <h2 className="text-xl font-bold text-gray-200">Tags</h2>
             <button onClick={handleCreateTag} className="btn btn-primary">
               <Plus className="w-4 h-4 mr-2" />
               Add Tag
@@ -549,30 +549,30 @@ export function ManageMetadataPage() {
           </div>
           <div className="space-y-2">
             {tags.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No tags yet. Create one to get started.</p>
+              <p className="text-gray-400 text-center py-8">No tags yet. Create one to get started.</p>
             ) : (
               tags.map((tag) => (
                 <div
                   key={tag.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="sub-item-card"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
                     <div
-                      className="w-4 h-4 rounded-full"
+                      className="w-4 h-4 rounded-full shadow-sm"
                       style={{ backgroundColor: tag.color }}
                     />
-                    <span className="font-medium text-gray-900">{tag.name}</span>
+                    <span className="font-semibold text-gray-100">{tag.name}</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="line-item-actions">
                     <button
                       onClick={() => handleUpdateTag(tag)}
-                      className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                      className="action-btn-primary"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteTag(tag.id)}
-                      className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                      className="action-btn-danger"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -595,7 +595,7 @@ export function ManageMetadataPage() {
             </button>
           </div>
           {subLineItemTypes.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-400">
               No sub-line item types yet. Create one to get started.
             </div>
           ) : (
@@ -603,32 +603,36 @@ export function ManageMetadataPage() {
               {subLineItemTypes.map((type) => (
                 <div
                   key={type.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="sub-item-card"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-gray-900">{type.name}</h3>
-                      {type.isDefault && (
-                        <span className="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded">
-                          Default
-                        </span>
-                      )}
+                  <div className="sub-item-content">
+                    <div className="sub-item-header">
+                      <div className="sub-item-name-section">
+                        <h3 className="font-semibold text-gray-100">{type.name}</h3>
+                        {type.isDefault && (
+                          <span className="px-2.5 py-1 text-xs font-semibold bg-primary-500/20 text-primary-300 border border-primary-500/30 rounded-full">
+                            Default
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {type.description && (
-                      <p className="text-sm text-gray-600 mt-1">{type.description}</p>
+                      <p className="text-sm text-gray-300 mt-1 mb-2">{type.description}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">Order: {type.order}</p>
+                    <p className="text-xs text-gray-400 font-medium">Order: {type.order}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="line-item-actions">
                     <button
                       onClick={() => handleUpdateSubLineItemType(type)}
-                      className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                      className="action-btn-primary"
+                      title="Edit"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteSubLineItemType(type.id)}
-                      className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                      className="action-btn-danger"
+                      title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

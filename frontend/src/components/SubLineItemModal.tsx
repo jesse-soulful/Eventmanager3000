@@ -278,8 +278,8 @@ export function SubLineItemModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 modal-animate-overlay">
+      <div className="bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl border border-gray-700 modal-animate-content">
         <h2 className="text-3xl font-bold gradient-text mb-6">
           {moduleType === ModuleTypeEnum.STAFF_POOL
             ? (lineItem ? 'Edit Event Assignment' : 'Add Event Assignment')
@@ -288,14 +288,14 @@ export function SubLineItemModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Warning Banner - Only show for non-staff-pool modules */}
           {showWarning && parentItem && moduleType !== ModuleTypeEnum.STAFF_POOL && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+            <div className="bg-yellow-500/10 border-l-4 border-yellow-500/50 p-4 rounded-lg">
               <div className="flex items-start">
-                <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3" />
+                <AlertTriangle className="w-5 h-5 text-yellow-400 mt-0.5 mr-3" />
                 <div className="flex-1">
-                  <h3 className="text-sm font-medium text-yellow-800 mb-1">
+                  <h3 className="text-sm font-medium text-yellow-300 mb-1">
                     Planned Cost Exceeds Total Budget
                   </h3>
-                  <p className="text-sm text-yellow-700 mb-3">
+                  <p className="text-sm text-yellow-400 mb-3">
                     The total planned cost of all sub-items ({formatCurrency(totalSubItemsPlanned)}) exceeds 
                     the artist's total planned cost ({formatCurrency(parentItem.plannedCost) || formatCurrency(0)}). 
                     Are you sure you want to continue?
@@ -314,7 +314,7 @@ export function SubLineItemModal({
                         setShowWarning(false);
                         setPendingSubmit(false);
                       }}
-                      className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                      className="px-3 py-1.5 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600"
                     >
                       Cancel
                     </button>
@@ -326,20 +326,20 @@ export function SubLineItemModal({
 
           {/* Cost Summary - Only show for non-staff-pool modules */}
           {parentItem && moduleType !== ModuleTypeEnum.STAFF_POOL && (
-            <div className="bg-gray-50 p-3 rounded-lg text-sm">
+            <div className="bg-gray-900/50 p-3 rounded-lg text-sm border border-gray-700/50">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-gray-600">Parent Total Planned Cost:</span>
-                <span className="font-semibold text-gray-900">
+                <span className="text-gray-400">Parent Total Planned Cost:</span>
+                <span className="font-semibold text-gray-200">
                   {formatCurrency(parentItem.plannedCost) || formatCurrency(0)}
                 </span>
               </div>
               {formData.plannedCost && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">This Sub-item Planned Cost:</span>
+                  <span className="text-gray-400">This Sub-item Planned Cost:</span>
                   <span className={`font-semibold ${
                     parseFloat(formData.plannedCost) > (parentItem.plannedCost || 0)
-                      ? 'text-red-600'
-                      : 'text-gray-900'
+                      ? 'text-red-400'
+                      : 'text-gray-200'
                   }`}>
                     {formatCurrency(parseFloat(formData.plannedCost))}
                   </span>
@@ -367,7 +367,7 @@ export function SubLineItemModal({
                           description: type.description || '',
                         });
                       }}
-                      className="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors text-left"
+                      className="flex items-center p-2 border border-gray-700 rounded-lg hover:bg-gray-800/50 cursor-pointer transition-colors text-left"
                     >
                       <div className="flex-1">
                         <span className="text-sm font-medium text-gray-700">{type.name}</span>

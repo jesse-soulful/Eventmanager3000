@@ -92,7 +92,7 @@ export function InlineTextInput({
             disabled={isSaving}
             maxLength={maxLength}
             rows={3}
-            className={`w-full px-2 py-1 text-sm border border-primary-500 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 resize-none ${className}`}
+            className={`w-full px-2 py-1 text-sm border border-primary-500 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 resize-none bg-gray-900/80 text-gray-100 placeholder-gray-500 ${className}`}
             placeholder={placeholder}
           />
           <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export function InlineTextInput({
               type="button"
               onClick={handleSave}
               disabled={isSaving}
-              className="text-green-600 hover:text-green-800 disabled:opacity-50 flex items-center gap-1"
+              className="text-emerald-400 hover:text-emerald-300 disabled:opacity-50 flex items-center gap-1"
               title="Save (Cmd/Ctrl+Enter)"
             >
               <Check className="w-3 h-3" />
@@ -110,14 +110,14 @@ export function InlineTextInput({
               type="button"
               onClick={handleCancel}
               disabled={isSaving}
-              className="text-red-600 hover:text-red-800 disabled:opacity-50 flex items-center gap-1"
+              className="text-red-400 hover:text-red-300 disabled:opacity-50 flex items-center gap-1"
               title="Cancel (Esc)"
             >
               <X className="w-3 h-3" />
               <span className="text-xs">Cancel</span>
             </button>
             {maxLength && (
-              <span className="text-xs text-gray-500 ml-auto">
+              <span className="text-xs text-gray-400 ml-auto">
                 {editValue.length}/{maxLength}
               </span>
             )}
@@ -137,7 +137,7 @@ export function InlineTextInput({
           onKeyDown={handleKeyDown}
           disabled={isSaving}
           maxLength={maxLength}
-          className={`px-2 py-0.5 text-sm border border-primary-500 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 ${className}`}
+          className={`px-2 py-0.5 text-sm border border-primary-500 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 bg-gray-900/80 text-gray-100 placeholder-gray-500 ${className}`}
           placeholder={placeholder}
         />
         <button
@@ -170,9 +170,9 @@ export function InlineTextInput({
       type="button"
       onClick={handleClick}
       disabled={disabled}
-      className={`text-sm font-medium hover:bg-gray-100 px-2 py-1 rounded transition-colors w-full text-left ${
+      className={`text-sm font-medium hover:bg-gray-700/50 px-2 py-1 rounded transition-colors w-full text-left ${
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-      } ${isEmpty ? 'text-gray-400 italic' : 'text-gray-900'} ${className}`}
+      } ${isEmpty ? 'text-gray-500 italic' : 'text-gray-100'} ${className}`}
       title={isEmpty ? `Click to ${placeholder.toLowerCase()}` : 'Click to edit'}
     >
       {isEmpty ? (

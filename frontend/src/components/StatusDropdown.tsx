@@ -84,27 +84,27 @@ export function StatusDropdown({
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute z-50 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto">
+        <div className="absolute z-50 mt-1 w-48 bg-gray-800 rounded-lg shadow-2xl border border-gray-600 py-1 max-h-60 overflow-auto backdrop-blur-sm">
           <button
             type="button"
             onClick={() => handleStatusSelect(null)}
-            className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${
-              !currentStatus ? 'bg-gray-50 font-medium' : ''
+            className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700/50 transition-colors rounded-md mx-1 ${
+              !currentStatus ? 'bg-gray-700/30 font-medium' : 'text-gray-300'
             }`}
           >
-            <span className="text-gray-500">No Status</span>
+            <span className={!currentStatus ? 'text-gray-200' : 'text-gray-400'}>No Status</span>
           </button>
           {statuses.map((status) => (
             <button
               key={status.id}
               type="button"
               onClick={() => handleStatusSelect(status.id)}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors flex items-center gap-2 ${
-                currentStatus?.id === status.id ? 'bg-gray-50 font-medium' : ''
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700/50 transition-colors flex items-center gap-2 rounded-md mx-1 ${
+                currentStatus?.id === status.id ? 'bg-gray-700/30 font-medium text-gray-100' : 'text-gray-300'
               }`}
             >
               <span
-                className="w-2 h-2 rounded-full"
+                className="w-2 h-2 rounded-full flex-shrink-0"
                 style={{ backgroundColor: status.color }}
               />
               <span>{status.name}</span>

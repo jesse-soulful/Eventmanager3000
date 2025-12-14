@@ -95,7 +95,7 @@ export function CommentsModal({ lineItemId, lineItemName, onClose, onCommentChan
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl">
+      <div className="bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl border border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -107,7 +107,7 @@ export function CommentsModal({ lineItemId, lineItemName, onClose, onCommentChan
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+            className="text-gray-400 hover:text-gray-300 transition-colors p-2 hover:bg-gray-700 rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
@@ -124,20 +124,20 @@ export function CommentsModal({ lineItemId, lineItemName, onClose, onCommentChan
             </div>
           ) : (
             comments.map((comment) => (
-              <div key={comment.id} className="bg-gray-50 rounded-lg p-4">
+              <div key={comment.id} className="bg-gray-900/50 rounded-lg p-4 border border-gray-700/50">
                 {editingCommentId === comment.id ? (
                   <div className="space-y-2">
                     <textarea
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full p-2 border border-gray-700 bg-gray-900/50 text-gray-100 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500/50"
                       rows={3}
                       autoFocus
                     />
                     <div className="flex gap-2 justify-end">
                       <button
                         onClick={cancelEdit}
-                        className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                        className="px-3 py-1.5 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
                       >
                         Cancel
                       </button>
@@ -153,7 +153,7 @@ export function CommentsModal({ lineItemId, lineItemName, onClose, onCommentChan
                   <>
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <p className="text-gray-900 whitespace-pre-wrap">{comment.content}</p>
+                        <p className="text-gray-200 whitespace-pre-wrap">{comment.content}</p>
                         <p className="text-xs text-gray-500 mt-2">
                           {format(new Date(comment.createdAt), 'MMM d, yyyy • h:mm a')}
                           {new Date(comment.updatedAt).getTime() !== new Date(comment.createdAt).getTime() && ' (edited)'}
@@ -162,14 +162,14 @@ export function CommentsModal({ lineItemId, lineItemName, onClose, onCommentChan
                       <div className="flex gap-2">
                         <button
                           onClick={() => startEdit(comment)}
-                          className="text-gray-400 hover:text-primary-600 transition-colors p-1"
+                          className="text-gray-400 hover:text-primary-400 transition-colors p-1"
                           title="Edit comment"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(comment.id)}
-                          className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                          className="text-gray-400 hover:text-red-400 transition-colors p-1"
                           title="Delete comment"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -184,13 +184,13 @@ export function CommentsModal({ lineItemId, lineItemName, onClose, onCommentChan
         </div>
 
         {/* Add Comment Form */}
-        <div className="border-t border-gray-200 p-6">
+        <div className="border-t border-gray-700 p-6">
           <form onSubmit={handleSubmit} className="space-y-3">
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Add a comment..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              className="w-full p-3 border border-gray-700 bg-gray-900/50 text-gray-100 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500/50 resize-none placeholder-gray-500"
               rows={3}
             />
             <div className="flex justify-end">

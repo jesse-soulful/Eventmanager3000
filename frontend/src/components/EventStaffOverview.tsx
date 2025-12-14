@@ -125,7 +125,7 @@ export function EventStaffOverview({ event }: EventStaffOverviewProps) {
   if (loading) {
     return (
       <div className="card">
-        <div className="text-center py-4 text-gray-500">Loading staff assignments...</div>
+        <div className="text-center py-4 text-gray-400">Loading staff assignments...</div>
       </div>
     );
   }
@@ -134,10 +134,10 @@ export function EventStaffOverview({ event }: EventStaffOverviewProps) {
     return (
       <div className="card">
         <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-primary-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Staff Assignments</h3>
+          <Users className="w-5 h-5 text-primary-400" />
+          <h3 className="text-lg font-semibold text-gray-100">Staff Assignments</h3>
         </div>
-        <p className="text-sm text-gray-500">No staff assigned to this event yet.</p>
+        <p className="text-sm text-gray-400">No staff assigned to this event yet.</p>
       </div>
     );
   }
@@ -155,36 +155,36 @@ export function EventStaffOverview({ event }: EventStaffOverviewProps) {
   }, {} as Record<string, StaffAssignment[]>);
 
   return (
-    <div className="card">
-      <div className="flex items-center gap-2 mb-4">
-        <Users className="w-5 h-5 text-primary-600" />
-        <h3 className="text-lg font-semibold text-gray-900">Staff Assignments</h3>
+    <div className="card mb-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Users className="w-5 h-5 text-primary-400" />
+        <h3 className="text-lg font-semibold text-gray-100">Staff Assignments</h3>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-6">
         {Object.entries(groupedByModule).map(([moduleName, assignments]) => (
           <div key={moduleName}>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">{moduleName}</h4>
+            <h4 className="text-xs font-semibold text-gray-400 uppercase mb-3 tracking-wider">{moduleName}</h4>
             <div className="space-y-2">
               {assignments.map((assignment, idx) => (
-                <div key={`${assignment.staffId}-${idx}`} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                <div key={`${assignment.staffId}-${idx}`} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700 hover:bg-gray-800/70 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Link
                         to="/staff-pool"
-                        className="text-sm font-medium text-primary-600 hover:text-primary-800"
+                        className="text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors"
                       >
                         {assignment.staffName}
                       </Link>
                       <span className="text-xs text-gray-500">•</span>
-                      <span className="text-sm text-gray-600">{assignment.role}</span>
+                      <span className="text-sm text-gray-300">{assignment.role}</span>
                     </div>
                     {assignment.subItem && (
-                      <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                      <div className="flex gap-4 mt-2 text-xs text-gray-400">
                         {assignment.subItem.plannedCost && (
-                          <span>Planned: {formatCurrency(assignment.subItem.plannedCost)}</span>
+                          <span>Planned: <span className="text-blue-400 font-medium">{formatCurrency(assignment.subItem.plannedCost)}</span></span>
                         )}
                         {assignment.subItem.actualCost && (
-                          <span>Actual: {formatCurrency(assignment.subItem.actualCost)}</span>
+                          <span>Actual: <span className="text-emerald-400 font-medium">{formatCurrency(assignment.subItem.actualCost)}</span></span>
                         )}
                       </div>
                     )}
@@ -192,7 +192,7 @@ export function EventStaffOverview({ event }: EventStaffOverviewProps) {
                   {typeof assignment.moduleType !== 'string' && (
                     <Link
                       to={`/events/${event.id}/${assignment.moduleType.toLowerCase().replace(/_/g, '-')}`}
-                      className="text-primary-600 hover:text-primary-800"
+                      className="text-primary-400 hover:text-primary-300 transition-colors ml-2 flex-shrink-0"
                       title="Go to module"
                     >
                       <LinkIcon className="w-4 h-4" />
