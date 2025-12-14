@@ -39,7 +39,11 @@ export function validateEnv(): EnvConfig {
   
   // Validate required variables
   const databaseUrl = getEnvVar('DATABASE_URL');
-  const betterAuthSecret = getEnvVar('BETTER_AUTH_SECRET');
+  
+  // BETTER_AUTH_SECRET: required in production, but allow default for development
+  const betterAuthSecret = nodeEnv === 'production' 
+    ? getEnvVar('BETTER_AUTH_SECRET')
+    : getEnvVarOptional('BETTER_AUTH_SECRET', 'dev-secret-key-change-in-production');
   
   // Check for default secret in production
   if (nodeEnv === 'production' && betterAuthSecret === 'change-this-secret-key-in-production') {
