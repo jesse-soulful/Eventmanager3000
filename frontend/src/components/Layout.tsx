@@ -4,6 +4,7 @@ import { Calendar, DollarSign, Menu, Settings, Package, Users, Building2 } from 
 import { useState } from 'react';
 import { GLOBAL_MODULES, MODULE_DISPLAY_NAMES, MODULE_COLORS } from '@event-management/shared';
 import type { ModuleType } from '@event-management/shared';
+import { UserMenu } from './UserMenu';
 
 interface LayoutProps {
   children: ReactNode;
@@ -77,13 +78,16 @@ export function Layout({ children }: LayoutProps) {
                 })}
               </div>
             </div>
-            <div className="sm:hidden flex items-center">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
-              >
-                <Menu className="h-6 w-6" />
-              </button>
+            <div className="flex items-center gap-4">
+              <UserMenu />
+              <div className="sm:hidden">
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                >
+                  <Menu className="h-6 w-6" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

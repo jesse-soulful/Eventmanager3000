@@ -25,6 +25,8 @@ import type {
   Comment,
   CreateCommentInput,
   UpdateCommentInput,
+  User,
+  UpdateUserInput,
 } from '@event-management/shared';
 
 const api = axios.create({
@@ -32,7 +34,23 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Include cookies in requests
 });
+
+// Add response interceptor to handle 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Redirect to login if unauthorized
+      // Only redirect if not already on login/signup page
+      if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/signup')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Events
 export const eventsApi = {
@@ -188,5 +206,13 @@ export const documentsApi = {
   },
   getByLineItem: (lineItemId: string) => api.get(`/documents/line-item/${lineItemId}`),
   delete: (lineItemId: string, documentIndex: number) => api.delete(`/documents/line-item/${lineItemId}/${documentIndex}`),
+};
+
+// Users (admin only)
+export const usersApi = {
+  getAll: () => api.get<User[]>('/users'),
+  getById: (id: string) => api.get<User>(`/users/${id}`),
+  update: (id: string, data: UpdateUserInput) => api.put<User>(`/users/${id}`, data),
+  delete: (id: string) => api.delete(`/users/${id}`),
 };
 

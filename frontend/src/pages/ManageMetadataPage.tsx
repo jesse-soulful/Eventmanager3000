@@ -7,6 +7,8 @@ import { StatusModal } from '../components/StatusModal';
 import { CategoryModal } from '../components/CategoryModal';
 import { TagModal } from '../components/TagModal';
 import { SubLineItemTypeModal } from '../components/SubLineItemTypeModal';
+import { UserManagement } from '../components/UserManagement';
+import { useAuth } from '../contexts/AuthContext';
 
 const MODULE_TYPES: ModuleType[] = [
   ...EVENT_SCOPED_MODULES,
@@ -14,7 +16,9 @@ const MODULE_TYPES: ModuleType[] = [
 ];
 
 export function ManageMetadataPage() {
-  const [activeTab, setActiveTab] = useState<'statuses' | 'categories' | 'tags' | 'subLineItemTypes'>('statuses');
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  const [activeTab, setActiveTab] = useState<'statuses' | 'categories' | 'tags' | 'subLineItemTypes' | 'users'>('statuses');
   const [selectedModule, setSelectedModule] = useState<ModuleType>(ModuleTypeEnum.ARTISTS);
   
   const [mainStatuses, setMainStatuses] = useState<Status[]>([]);
@@ -293,25 +297,27 @@ export function ManageMetadataPage() {
         <p className="text-gray-600">Manage statuses, categories, and tags for line items</p>
       </div>
 
-      {/* Module Selector */}
-      <div className="card mb-6">
-        <label className="label mb-3">Select Module</label>
-        <div className="flex flex-wrap gap-2">
-          {MODULE_TYPES.map((moduleType) => (
-            <button
-              key={moduleType}
-              onClick={() => setSelectedModule(moduleType)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                selectedModule === moduleType
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {MODULE_DISPLAY_NAMES[moduleType]}
-            </button>
-          ))}
+      {/* Module Selector - Hidden for Users tab */}
+      {activeTab !== 'users' && (
+        <div className="card mb-6">
+          <label className="label mb-3">Select Module</label>
+          <div className="flex flex-wrap gap-2">
+            {MODULE_TYPES.map((moduleType) => (
+              <button
+                key={moduleType}
+                onClick={() => setSelectedModule(moduleType)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  selectedModule === moduleType
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {MODULE_DISPLAY_NAMES[moduleType]}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b border-gray-200">
@@ -355,6 +361,18 @@ export function ManageMetadataPage() {
         >
           Sub-Line Item Types ({subLineItemTypes.length})
         </button>
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+              activeTab === 'users'
+                ? 'border-primary-600 text-primary-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Users
+          </button>
+        )}
       </div>
 
       {/* Statuses Tab */}
@@ -620,6 +638,11 @@ export function ManageMetadataPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Users Tab - Admin Only */}
+      {isAdmin && activeTab === 'users' && (
+        <UserManagement />
       )}
 
       {/* Modals */}

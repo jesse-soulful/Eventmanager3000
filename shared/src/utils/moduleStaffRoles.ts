@@ -44,3 +44,5 @@ export function moduleSupportsStaffAssignments(moduleType: ModuleType): boolean 
          moduleType !== ModuleType.STAFF_POOL;
 }
 
+
+

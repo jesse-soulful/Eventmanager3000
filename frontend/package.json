@@ -11,6 +11,7 @@
   "dependencies": {
     "@event-management/shared": "file:../shared",
     "axios": "^1.6.2",
+    "better-auth": "^1.4.7",
     "date-fns": "^3.0.0",
     "jspdf": "^3.0.4",
     "lucide-react": "^0.303.0",

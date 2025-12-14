@@ -8,6 +8,7 @@ export * from './types/category';
 export * from './types/tag';
 export * from './types/comment';
 export * from './types/finance';
+export * from './types/user';
 
 // Module types
 export * from './types/modules/artist';
