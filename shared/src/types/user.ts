@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   name?: string | null;
+  image?: string | null;
   role: 'ADMIN' | 'USER' | 'VIEWER';
   emailVerified: boolean;
   createdAt: Date;

@@ -56,7 +56,19 @@ export function UserMenu() {
         className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-800/60 transition-colors border border-gray-700/50"
       >
         <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${roleColor}`}>
+          {user.image ? (
+            <img
+              src={user.image.startsWith('/api') ? user.image : `/api${user.image}`}
+              alt={user.name || 'Profile'}
+              className="w-8 h-8 rounded-full object-cover border-2"
+              style={{ borderColor: roleColor.includes('purple') ? 'rgba(168, 85, 247, 0.3)' : roleColor.includes('blue') ? 'rgba(59, 130, 246, 0.3)' : 'rgba(107, 114, 128, 0.5)' }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${roleColor} ${user.image ? 'hidden' : ''}`}>
             <User className="w-4 h-4" />
           </div>
           <div className="hidden md:block text-left">
@@ -71,9 +83,28 @@ export function UserMenu() {
         <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-gray-800 border border-gray-700/50 backdrop-blur-xl z-50">
           <div className="py-1">
             <div className="px-4 py-2 border-b border-gray-700/50">
-              <p className="text-sm font-medium text-gray-200">{user.name || 'User'}</p>
-              <p className="text-xs text-gray-400">{user.email}</p>
-              <span className={`inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded border ${roleColor}`}>
+              <div className="flex items-center gap-3 mb-2">
+                {user.image ? (
+                  <img
+                    src={user.image.startsWith('/api') ? user.image : `/api${user.image}`}
+                    alt={user.name || 'Profile'}
+                    className="w-12 h-12 rounded-full object-cover border-2"
+                    style={{ borderColor: roleColor.includes('purple') ? 'rgba(168, 85, 247, 0.3)' : roleColor.includes('blue') ? 'rgba(59, 130, 246, 0.3)' : 'rgba(107, 114, 128, 0.5)' }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${roleColor}`}>
+                    <User className="w-6 h-6" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-200 truncate">{user.name || 'User'}</p>
+                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                </div>
+              </div>
+              <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded border ${roleColor}`}>
                 {user.role}
               </span>
             </div>

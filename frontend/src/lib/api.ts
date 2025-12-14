@@ -215,8 +215,17 @@ export const usersApi = {
   update: (id: string, data: UpdateUserInput) => api.put<User>(`/users/${id}`, data),
   delete: (id: string) => api.delete(`/users/${id}`),
   // Profile management (own profile)
-  updateProfile: (data: { name?: string | null }) => api.put<User>('/users/profile', data),
+  updateProfile: (data: { name?: string | null; image?: string | null }) => api.put<User>('/users/profile', data),
   changePassword: (data: { currentPassword: string; newPassword: string }) => 
     api.put<{ success: boolean; message: string }>('/users/profile/password', data),
+  uploadProfilePicture: (file: File) => {
+    const formData = new FormData();
+    formData.append('picture', file);
+    return api.post<{ image: string }>('/users/profile/picture', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
 

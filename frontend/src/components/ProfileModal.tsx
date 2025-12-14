@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, User, Mail, Shield, Lock, Eye, EyeOff } from 'lucide-react';
+import { X, User, Mail, Shield, Lock, Eye, EyeOff, Camera, Upload } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { usersApi } from '../lib/api';
 
@@ -21,12 +21,16 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen && user) {
       setName(user.name || '');
+      setProfileImage(user.image || null);
       setError(null);
       setSuccess(null);
       setCurrentPassword('');
@@ -47,7 +51,7 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
     setIsLoading(true);
 
     try {
-      await usersApi.updateProfile({ name: name.trim() || null });
+      await usersApi.updateProfile({ name: name.trim() || null, image: profileImage });
       setSuccess('Profile updated successfully');
       setTimeout(() => {
         onUpdate?.();
@@ -55,6 +59,55 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
       }, 1000);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Invalid file type. Please upload an image (JPG, PNG, WEBP, or GIF).');
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size too large. Please upload an image smaller than 5MB.');
+      return;
+    }
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const response = await usersApi.uploadProfilePicture(file);
+      setProfileImage(response.data.image);
+      setSuccess('Profile picture uploaded successfully');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to upload profile picture');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await usersApi.updateProfile({ image: null });
+      setProfileImage(null);
+      setSuccess('Profile picture removed successfully');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to remove profile picture');
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +177,19 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
       <div className="modal-content modal-animate-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${roleColor}`}>
+            {profileImage ? (
+              <img
+                src={profileImage.startsWith('/api') ? profileImage : `/api${profileImage}`}
+                alt="Profile"
+                className="w-10 h-10 rounded-full object-cover border-2"
+                style={{ borderColor: roleColor.includes('purple') ? 'rgba(168, 85, 247, 0.3)' : roleColor.includes('blue') ? 'rgba(59, 130, 246, 0.3)' : 'rgba(107, 114, 128, 0.5)' }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${roleColor} ${profileImage ? 'hidden' : ''}`}>
               <User className="w-5 h-5" />
             </div>
             <div>
@@ -183,6 +248,66 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
 
           {activeTab === 'profile' ? (
             <form onSubmit={handleProfileSubmit} className="space-y-4">
+              {/* Profile Picture */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <Camera className="w-4 h-4 inline mr-2" />
+                  Profile Picture
+                </label>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    {profileImage ? (
+                      <img
+                        src={profileImage.startsWith('/api') ? profileImage : `/api${profileImage}`}
+                        alt="Profile"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-700"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center border-2 border-gray-600">
+                        <User className="w-10 h-10 text-gray-400" />
+                      </div>
+                    )}
+                    {isUploading && (
+                      <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-400"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="profile-picture-upload"
+                      disabled={isUploading}
+                    />
+                    <label
+                      htmlFor="profile-picture-upload"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg cursor-pointer transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Upload className="w-4 h-4" />
+                      {isUploading ? 'Uploading...' : 'Upload Picture'}
+                    </label>
+                    {profileImage && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm font-medium"
+                        disabled={isLoading}
+                      >
+                        Remove Picture
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">JPG, PNG, WEBP, or GIF. Max 5MB.</p>
+              </div>
+
               {/* Email (read-only) */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">

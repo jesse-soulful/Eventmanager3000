@@ -6,6 +6,7 @@ interface AuthContextType {
     id: string;
     email: string;
     name?: string | null;
+    image?: string | null;
     role: string;
   } | null;
   session: {
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: session.user.id,
           email: session.user.email,
           name: session.user.name,
+          image: (session.user as any).image || null,
           role: (session.user as any).role || 'USER',
         }
       : null,
