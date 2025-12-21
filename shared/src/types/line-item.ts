@@ -53,7 +53,7 @@ export interface CreateLineItemInput {
   unitPrice?: number;
   plannedCost?: number;
   actualCost?: number;
-  statusId: string;
+  statusId?: string;
   categoryId?: string;
   tagIds?: string[];
   parentLineItemId?: string;

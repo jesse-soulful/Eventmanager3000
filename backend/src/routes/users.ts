@@ -239,7 +239,7 @@ userRoutes.put('/profile/password', requireAuth, validate({ body: changePassword
       include: {
         accounts: {
           where: {
-            provider: 'credential',
+            providerId: 'credential',
           },
         },
       },
@@ -265,22 +265,22 @@ userRoutes.put('/profile/password', requireAuth, validate({ body: changePassword
         password: currentPassword,
       },
       headers: authRequest.headers,
-    });
+    }) as any;
 
-    if (signInResult.error) {
+    if ((signInResult as any).error) {
       return res.status(400).json({ error: 'Current password is incorrect' });
     }
 
     // Update password using better-auth's password update
     // We need to update the account's password hash
-    const account = user.accounts[0];
+    const account = user?.accounts?.[0];
     if (!account) {
       return res.status(400).json({ error: 'No credential account found' });
     }
 
-    // Use better-auth's password hashing
-    const { hash } = await import('better-auth/utils');
-    const hashedPassword = await hash(newPassword);
+    // Use bcrypt for password hashing (same as better-auth uses)
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.default.hash(newPassword, 10);
 
     await prisma.account.update({
       where: { id: account.id },

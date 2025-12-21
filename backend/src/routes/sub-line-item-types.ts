@@ -34,7 +34,19 @@ subLineItemTypeRoutes.get('/:moduleType', async (req, res) => {
     res.json(types);
   } catch (error: any) {
     console.error('❌ Error fetching sub-line item types:', error);
-    res.status(500).json({ error: 'Failed to fetch sub-line item types', details: error?.message });
+    console.error('Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+      code: error?.code,
+    });
+    res.status(500).json({ 
+      error: 'Failed to fetch sub-line item types', 
+      ...(process.env.NODE_ENV === 'development' && { 
+        details: error?.message,
+        stack: error?.stack 
+      })
+    });
   }
 });
 
@@ -94,12 +106,21 @@ subLineItemTypeRoutes.post('/', async (req, res) => {
     res.status(201).json(type);
   } catch (error: any) {
     console.error('Error creating sub-line item type:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+      code: error?.code,
+    });
     if (error.code === 'P2002') {
       return res.status(409).json({ error: 'Sub-line item type with this name already exists' });
     }
     res.status(500).json({ 
       error: 'Failed to create sub-line item type',
-      details: error?.message 
+      ...(process.env.NODE_ENV === 'development' && { 
+        details: error?.message,
+        stack: error?.stack 
+      })
     });
   }
 });

@@ -51,6 +51,7 @@ const CREATION_WINDOW_MS = 5000; // 5 second window
 
 // Create status
 statusRoutes.post('/', async (req, res) => {
+  let validatedEventId: string | null = null;
   try {
     const { eventId, moduleType, name, color, order, isDefault, itemType } = req.body;
     const requestId = `${moduleType}-${name}-${itemType}-${Date.now()}`;
@@ -61,7 +62,7 @@ statusRoutes.post('/', async (req, res) => {
     
     // Metadata is now global - eventId is optional and can be null
     // If eventId is provided, validate it exists (for backward compatibility)
-    let validatedEventId: string | null = null;
+    validatedEventId = null;
     if (eventId) {
       const event = await prisma.event.findUnique({
         where: { id: eventId },
@@ -193,7 +194,7 @@ statusRoutes.post('/', async (req, res) => {
     }
     if (error.code === 'P2003') {
       // Prisma foreign key constraint violation
-      return res.status(404).json({ error: eventId ? `Event with id ${eventId} not found` : 'Invalid event reference' });
+      return res.status(404).json({ error: validatedEventId ? `Event with id ${validatedEventId} not found` : 'Invalid event reference' });
     }
     res.status(500).json({ error: 'Failed to create status', details: error?.message });
   }

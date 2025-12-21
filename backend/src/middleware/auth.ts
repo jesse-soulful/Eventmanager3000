@@ -66,8 +66,13 @@ export async function requireAuth(
     };
 
     next();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Auth middleware error:', error);
+    console.error('Auth middleware error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+    });
     return res.status(401).json({ error: 'Unauthorized - Invalid session' });
   }
 }

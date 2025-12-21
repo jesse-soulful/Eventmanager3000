@@ -235,13 +235,13 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
 
         <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
           {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+            <div className="alert-error mb-4">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-sm">
+            <div className="alert-success mb-4">
               {success}
             </div>
           )}
@@ -249,8 +249,8 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
           {activeTab === 'profile' ? (
             <form onSubmit={handleProfileSubmit} className="space-y-4">
               {/* Profile Picture */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+              <div className="form-group">
+                <label className="label">
                   <Camera className="w-4 h-4 inline mr-2" />
                   Profile Picture
                 </label>
@@ -310,7 +310,7 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
 
               {/* Email (read-only) */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="label">
                   <Mail className="w-4 h-4 inline mr-2" />
                   Email
                 </label>
@@ -318,14 +318,14 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
                   type="email"
                   value={user?.email || ''}
                   disabled
-                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-gray-400 cursor-not-allowed"
+                  className="input opacity-60 cursor-not-allowed"
                 />
-                <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
+                  <p className="help-text">Email cannot be changed</p>
               </div>
 
               {/* Name */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="name" className="label">
                   <User className="w-4 h-4 inline mr-2" />
                   Name
                 </label>
@@ -335,13 +335,13 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your name"
-                  className="w-full px-4 py-2 bg-gray-900/80 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="input"
                 />
               </div>
 
               {/* Role (read-only) */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="label">
                   <Shield className="w-4 h-4 inline mr-2" />
                   Role
                 </label>
@@ -349,7 +349,7 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
                   <span className={`px-3 py-2 rounded-lg text-sm font-semibold border ${roleColor}`}>
                     {user?.role || 'USER'}
                   </span>
-                  <p className="text-xs text-gray-500">Role is managed by administrators</p>
+                  <p className="help-text">Role is managed by administrators</p>
                 </div>
               </div>
             </form>
@@ -357,7 +357,7 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               {/* Current Password */}
               <div>
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="currentPassword" className="label">
                   <Lock className="w-4 h-4 inline mr-2" />
                   Current Password
                 </label>
@@ -368,7 +368,7 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="Enter current password"
-                    className="w-full px-4 py-2 pr-10 bg-gray-900/80 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="input pr-10"
                   />
                   <button
                     type="button"
@@ -382,7 +382,7 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
 
               {/* New Password */}
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="newPassword" className="label">
                   <Lock className="w-4 h-4 inline mr-2" />
                   New Password
                 </label>
@@ -393,7 +393,7 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Enter new password (min. 8 characters)"
-                    className="w-full px-4 py-2 pr-10 bg-gray-900/80 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="input pr-10"
                   />
                   <button
                     type="button"
@@ -403,12 +403,12 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
                     {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters long</p>
+                <p className="help-text">Must be at least 8 characters long</p>
               </div>
 
               {/* Confirm Password */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="confirmPassword" className="label">
                   <Lock className="w-4 h-4 inline mr-2" />
                   Confirm New Password
                 </label>
@@ -419,7 +419,7 @@ export function ProfileModal({ isOpen, onClose, onUpdate }: ProfileModalProps) {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm new password"
-                    className="w-full px-4 py-2 pr-10 bg-gray-900/80 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="input pr-10"
                   />
                   <button
                     type="button"

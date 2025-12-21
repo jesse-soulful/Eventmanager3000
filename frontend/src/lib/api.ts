@@ -229,3 +229,11 @@ export const usersApi = {
   },
 };
 
+// Password Reset (public)
+export const passwordResetApi = {
+  requestReset: (email: string) => api.post<{ success: boolean; message: string }>('/password-reset/request', { email }),
+  resetPassword: (token: string, newPassword: string) => 
+    api.post<{ success: boolean; message: string }>('/password-reset/reset', { token, newPassword }),
+  verifyToken: (token: string) => api.get<{ valid: boolean; error?: string }>(`/password-reset/verify?token=${encodeURIComponent(token)}`),
+};
+

@@ -44,7 +44,7 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
       {/* Top Navigation */}
-      <nav className="bg-gray-900/95 backdrop-blur-xl border-b border-gray-800/50 sticky top-0 z-50 shadow-2xl shadow-black/30">
+      <nav className="bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/60 sticky top-0 z-50 shadow-2xl shadow-black/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -60,16 +60,16 @@ export function Layout({ children }: LayoutProps) {
                   const isActive = location.pathname === item.href || 
                     (item.href !== '#' && location.pathname.startsWith(item.href));
                   
-                  if (item.disabled) return null;
+                  // Navigation items don't have disabled property
                   
                   return (
                     <Link
                       key={item.name}
                       to={item.href}
-                      className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                         isActive
-                          ? 'bg-primary-600/20 text-primary-300 border border-primary-500/40 shadow-md shadow-primary-500/10'
-                          : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800/60 border border-transparent'
+                          ? 'bg-primary-600/25 text-primary-200 border border-primary-500/50 shadow-md shadow-primary-500/20'
+                          : 'text-gray-300 hover:text-gray-50 hover:bg-gray-800/70 border border-transparent'
                       }`}
                     >
                       <Icon className={`w-4 h-4 mr-2 ${isActive ? 'text-primary-400' : ''}`} />
@@ -96,21 +96,21 @@ export function Layout({ children }: LayoutProps) {
 
         {/* Mobile menu */}
         {sidebarOpen && (
-          <div className="md:hidden border-t border-gray-800/50 bg-gray-900/98 backdrop-blur-xl">
+          <div className="md:hidden border-t border-gray-700/60 bg-gray-900/95 backdrop-blur-xl">
             <div className="pt-2 pb-3 space-y-1 px-4">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href || 
                   (item.href !== '#' && location.pathname.startsWith(item.href));
-                if (item.disabled) return null;
+                // Navigation items don't have disabled property
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`flex items-center pl-3 pr-4 py-3 rounded-lg border-l-4 text-base font-medium transition-all ${
+                    className={`flex items-center pl-3 pr-4 py-3 rounded-lg border-l-4 text-base font-semibold transition-all ${
                       isActive
-                        ? 'text-primary-300 bg-primary-600/10 border-primary-500'
-                        : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800/60 border-transparent'
+                        ? 'text-primary-200 bg-primary-600/20 border-primary-500'
+                        : 'text-gray-300 hover:text-gray-50 hover:bg-gray-800/70 border-transparent'
                     }`}
                     onClick={() => setSidebarOpen(false)}
                   >

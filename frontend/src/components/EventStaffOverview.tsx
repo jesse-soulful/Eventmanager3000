@@ -189,9 +189,9 @@ export function EventStaffOverview({ event }: EventStaffOverviewProps) {
                       </div>
                     )}
                   </div>
-                  {typeof assignment.moduleType !== 'string' && (
+                  {assignment.moduleType && typeof assignment.moduleType === 'string' && !assignment.moduleType.includes('Event Details') && (
                     <Link
-                      to={`/events/${event.id}/${assignment.moduleType.toLowerCase().replace(/_/g, '-')}`}
+                      to={`/events/${event.id}/${(assignment.moduleType as string).toLowerCase().replace(/_/g, '-')}`}
                       className="text-primary-400 hover:text-primary-300 transition-colors ml-2 flex-shrink-0"
                       title="Go to module"
                     >

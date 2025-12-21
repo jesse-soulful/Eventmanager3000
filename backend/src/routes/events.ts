@@ -43,12 +43,12 @@ eventRoutes.get('/', async (req, res) => {
     });
     // Parse metadata for all events
     const parsedEvents = events.map(event => {
-      const parsed = { ...event };
+      const parsed: any = { ...event };
       if (parsed.metadata && typeof parsed.metadata === 'string') {
         try {
           parsed.metadata = JSON.parse(parsed.metadata);
         } catch {
-          parsed.metadata = {};
+          parsed.metadata = null;
         }
       }
       return parsed;
@@ -56,7 +56,18 @@ eventRoutes.get('/', async (req, res) => {
     res.json(parsedEvents);
   } catch (error: any) {
     console.error('Error fetching events:', error);
-    res.status(500).json({ error: 'Failed to fetch events', details: error?.message });
+    console.error('Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+    });
+    res.status(500).json({ 
+      error: 'Failed to fetch events', 
+      ...(process.env.NODE_ENV === 'development' && { 
+        details: error?.message,
+        stack: error?.stack 
+      })
+    });
   }
 });
 

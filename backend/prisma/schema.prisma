@@ -172,9 +172,10 @@ model User {
   role          String    @default("USER") // USER, ADMIN, VIEWER
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  comments      Comment[]
+  accounts           Account[]
+  sessions           Session[]
+  comments           Comment[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([email])
 }
@@ -222,5 +223,19 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@unique([identifier, value])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
   @@index([expiresAt])
 }

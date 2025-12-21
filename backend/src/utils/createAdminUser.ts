@@ -36,18 +36,21 @@ async function createAdminUser() {
         password,
         name,
       },
-    });
+    }) as any;
 
-    if (result.error) {
-      throw new Error(result.error.message);
+    if ((result as any).error) {
+      throw new Error((result as any).error.message);
     }
 
     // Update role to ADMIN
-    if (result.data?.user) {
-      await prisma.user.update({
-        where: { id: result.data.user.id },
-        data: { role: 'ADMIN' },
-      });
+    if ((result as any).data?.user || (result as any).user) {
+      const userId = (result as any).data?.user?.id || (result as any).user?.id;
+      if (userId) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { role: 'ADMIN' },
+        });
+      }
     }
 
     console.log('✅ Admin user created successfully!');

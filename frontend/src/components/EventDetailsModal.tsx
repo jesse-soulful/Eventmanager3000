@@ -125,14 +125,13 @@ export function EventDetailsModal({ event, onClose, onSave }: EventDetailsModalP
         ...updatedVenueData,
         startDate: editData.startDate ? new Date(editData.startDate) : undefined,
         endDate: editData.endDate ? new Date(editData.endDate) : undefined,
-        venueCapacity: updatedVenueData.venueCapacity !== undefined ? (updatedVenueData.venueCapacity === null ? null : Number(updatedVenueData.venueCapacity)) : undefined,
-        metadata: JSON.stringify(metadata),
+        venueCapacity: updatedVenueData.venueCapacity !== undefined ? (updatedVenueData.venueCapacity === null ? undefined : Number(updatedVenueData.venueCapacity)) : undefined,
       });
 
       // Handle staff assignment sub-line items (create new, remove old)
       const staffAssignments = [
-        { staff: promotorStaff, previousId: previousPromotorId, role: StaffRole.PROMOTOR, moduleType: ModuleTypeEnum.EVENT_DETAILS },
-        { staff: artistLiaisonStaff, previousId: previousArtistLiaisonId, role: StaffRole.ARTIST_LIAISON, moduleType: ModuleTypeEnum.EVENT_DETAILS },
+        { staff: promotorStaff, previousId: previousPromotorId, role: StaffRole.PROMOTOR, moduleType: ModuleTypeEnum.PRODUCTION },
+        { staff: artistLiaisonStaff, previousId: previousArtistLiaisonId, role: StaffRole.ARTIST_LIAISON, moduleType: ModuleTypeEnum.PRODUCTION },
       ];
 
       for (const assignment of staffAssignments) {

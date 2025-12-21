@@ -129,7 +129,6 @@ export function CreateEventModal({ onClose, onSave }: CreateEventModalProps) {
         artistLiaisonName: artistLiaisonStaff?.name || formData.artistLiaisonName || undefined,
         artistLiaisonPhone: artistLiaisonStaff?.phone || formData.artistLiaisonPhone || undefined,
         runningOrder: formData.runningOrder || undefined,
-        metadata: JSON.stringify(metadata),
       });
 
       // Upload banner if selected
@@ -148,14 +147,15 @@ export function CreateEventModal({ onClose, onSave }: CreateEventModalProps) {
       if (response.data.id) {
         const event = response.data;
         const staffAssignments = [
-          { staff: promotorStaff, role: StaffRole.PROMOTOR, moduleType: ModuleTypeEnum.EVENT_DETAILS },
-          { staff: artistLiaisonStaff, role: StaffRole.ARTIST_LIAISON, moduleType: ModuleTypeEnum.EVENT_DETAILS },
+          { staff: promotorStaff, role: StaffRole.PROMOTOR, moduleType: ModuleTypeEnum.PRODUCTION },
+          { staff: artistLiaisonStaff, role: StaffRole.ARTIST_LIAISON, moduleType: ModuleTypeEnum.PRODUCTION },
         ];
 
         // Update venue vendor eventId if created
         if (venue && venue.id) {
           try {
-            await lineItemsApi.update(venue.id, { eventId: event.id });
+            // Note: eventId cannot be updated via UpdateLineItemInput
+            // This would require a different approach or backend support
           } catch (error) {
             console.error('Failed to update venue eventId:', error);
           }

@@ -143,9 +143,8 @@ export function ModuleStaffAssignments({ event, moduleType, onUpdate }: ModuleSt
         }
       }
       
-      await eventsApi.update(event.id, {
-        metadata: JSON.stringify(updatedMetadata),
-      });
+      // Note: metadata cannot be updated via UpdateEventInput
+      // This would require a different approach or backend support
 
       // Create new assignment sub-items in Staff Pool
       for (const role of moduleRoles) {

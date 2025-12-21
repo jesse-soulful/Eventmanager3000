@@ -3,65 +3,126 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    @apply border-gray-700/50;
+  }
+  
   body {
-    background: linear-gradient(to bottom right, #030712, #111827, #030712);
-    @apply text-gray-100 antialiased;
+    background: linear-gradient(to bottom right, #030712, #0f172a, #030712);
+    @apply text-gray-50 antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-gray-50;
+    letter-spacing: -0.025em;
+  }
+  
+  h1 {
+    @apply text-4xl md:text-5xl;
+    line-height: 1.1;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-4xl;
+    line-height: 1.2;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl;
+    line-height: 1.3;
+  }
+  
+  h4 {
+    @apply text-xl md:text-2xl;
+    line-height: 1.4;
+  }
+  
+  p {
+    @apply text-gray-200 leading-relaxed;
+  }
+  
+  a {
+    @apply text-primary-400 hover:text-primary-300 transition-colors;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md;
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md;
+    letter-spacing: 0.01em;
   }
   
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-500 hover:to-primary-600 focus:ring-primary-500 active:scale-[0.98] shadow-lg shadow-primary-500/30 hover:shadow-primary-500/40;
+    @apply bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-400 hover:to-primary-500 focus:ring-primary-400 active:scale-[0.98] shadow-lg shadow-primary-500/40 hover:shadow-primary-500/50;
+    font-weight: 600;
   }
   
   .btn-secondary {
-    @apply bg-gray-800 text-gray-200 border border-gray-700 hover:bg-gray-700 hover:border-gray-600 focus:ring-gray-600 active:scale-[0.98] hover:shadow-md;
+    @apply bg-gray-800/90 text-gray-100 border border-gray-600/50 hover:bg-gray-700/90 hover:border-gray-500/50 focus:ring-gray-500 active:scale-[0.98] hover:shadow-md backdrop-blur-sm;
+    font-weight: 600;
   }
   
   .btn-danger {
-    @apply bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-500 hover:to-red-600 focus:ring-red-500 active:scale-[0.98] shadow-lg shadow-red-500/30 hover:shadow-red-500/40;
+    @apply bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-400 hover:to-red-500 focus:ring-red-400 active:scale-[0.98] shadow-lg shadow-red-500/40 hover:shadow-red-500/50;
+    font-weight: 600;
   }
   
   .btn-ghost {
-    @apply bg-transparent text-gray-400 border border-transparent hover:bg-gray-800/60 hover:text-gray-200 focus:ring-gray-600 active:scale-[0.98];
+    @apply bg-transparent text-gray-300 border border-transparent hover:bg-gray-800/70 hover:text-gray-100 hover:border-gray-600/50 focus:ring-gray-500 active:scale-[0.98];
+    font-weight: 500;
   }
   
   .card {
-    @apply bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 hover:shadow-2xl hover:border-gray-600/50 transition-all duration-300;
+    @apply bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-700/60 p-6 hover:shadow-2xl hover:border-gray-600/70 transition-all duration-300;
   }
   
   .card-hover {
-    @apply card hover:scale-[1.01] hover:border-primary-500/30 cursor-pointer;
+    @apply card hover:scale-[1.01] hover:border-primary-500/40 cursor-pointer;
   }
   
   .input {
-    @apply w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-900/60 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-200 hover:border-gray-600;
+    @apply w-full px-4 py-3 border border-gray-600/50 rounded-xl bg-gray-900/80 text-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/60 focus:border-primary-500/70 transition-all duration-200 hover:border-gray-500/70;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  
+  textarea.input {
+    @apply min-h-[100px] resize-y;
   }
   
   select.input,
   select {
-    @apply w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-900/60 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-200 hover:border-gray-600 cursor-pointer;
+    @apply w-full px-4 py-3 border border-gray-600/50 rounded-xl bg-gray-900/80 text-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500/60 focus:border-primary-500/70 transition-all duration-200 hover:border-gray-500/70 cursor-pointer;
+    font-size: 0.9375rem;
+    line-height: 1.5;
   }
   
   select option {
-    @apply bg-gray-800 text-gray-100;
+    @apply bg-gray-800 text-gray-50;
   }
   
   .label {
-    @apply block text-sm font-semibold text-gray-300 mb-2;
+    @apply block text-sm font-semibold text-gray-200 mb-2.5;
+    letter-spacing: 0.01em;
+  }
+  
+  .label-required::after {
+    content: ' *';
+    @apply text-red-400;
   }
   
   .badge {
     @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border;
+    letter-spacing: 0.025em;
   }
   
   .gradient-text {
     @apply bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 bg-clip-text text-transparent;
+    font-weight: 700;
   }
   
   .page-header {
@@ -69,18 +130,21 @@
   }
   
   .page-title {
-    @apply text-4xl font-bold gradient-text mb-2;
+    @apply text-4xl md:text-5xl font-bold gradient-text mb-3;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
   }
   
   .page-subtitle {
-    @apply text-gray-400 text-lg;
+    @apply text-gray-300 text-lg md:text-xl;
+    line-height: 1.6;
   }
   
   .modal-overlay {
     position: fixed !important;
     inset: 0 !important;
-    background-color: rgba(0, 0, 0, 0.7) !important;
-    backdrop-filter: blur(4px) !important;
+    background-color: rgba(0, 0, 0, 0.75) !important;
+    backdrop-filter: blur(8px) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -96,10 +160,12 @@
   
   .modal-content {
     background-color: rgb(31, 41, 55) !important;
-    border-radius: 1rem !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-    border: 1px solid rgba(55, 65, 81, 0.5) !important;
-    max-width: 28rem !important;
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.98) 0%, rgba(17, 24, 39, 0.98) 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(75, 85, 99, 0.6) !important;
+    max-width: 32rem !important;
     width: 100% !important;
     display: flex !important;
     flex-direction: column !important;
@@ -139,19 +205,22 @@
   }
   
   .modal-header {
-    @apply flex items-center justify-between p-6 border-b border-gray-700/50 sticky top-0 bg-gray-800/95 backdrop-blur-sm z-10;
+    @apply flex items-center justify-between p-6 border-b border-gray-700/60 sticky top-0 bg-gray-800/95 backdrop-blur-md z-10;
   }
   
   .modal-title {
-    @apply text-2xl font-bold text-gray-100;
+    @apply text-2xl font-bold text-gray-50;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
   }
   
   .modal-body {
-    @apply p-6;
+    @apply p-6 text-gray-200;
+    line-height: 1.6;
   }
   
   .modal-footer {
-    @apply flex items-center justify-end gap-3 p-6 border-t border-gray-700/50 sticky bottom-0 bg-gray-800/95 backdrop-blur-sm;
+    @apply flex items-center justify-end gap-3 p-6 border-t border-gray-700/60 sticky bottom-0 bg-gray-800/95 backdrop-blur-md;
   }
 
   .card-flip-container {
@@ -214,12 +283,12 @@
 
   /* Line Item Card - Main container for line items */
   .line-item-card {
-    @apply bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 hover:shadow-2xl hover:border-gray-600/50 transition-all duration-300;
+    @apply bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-700/60 p-6 hover:shadow-2xl hover:border-gray-600/70 transition-all duration-300;
   }
 
   /* Line Item Header - Top section with title, status, budget */
   .line-item-header {
-    @apply flex items-center gap-6 pb-4 border-b border-gray-700;
+    @apply flex items-center gap-6 pb-4 border-b border-gray-700/60;
   }
 
   /* Line Item Content - Main content area */
@@ -230,6 +299,8 @@
   /* Line Item Title */
   .line-item-title {
     @apply text-xl font-bold text-gray-50 flex-shrink-0;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
   }
 
   /* Line Item Actions - Action buttons container - aligned to the right */
@@ -239,7 +310,7 @@
 
   /* Sub Item Card - Container for sub-line items */
   .sub-item-card {
-    @apply flex items-start gap-4 p-4 bg-gray-800/60 rounded-xl border border-gray-700 hover:border-gray-600 hover:bg-gray-800/80 transition-all shadow-sm;
+    @apply flex items-start gap-4 p-4 bg-gray-800/70 rounded-xl border border-gray-700/60 hover:border-gray-600/70 hover:bg-gray-800/85 transition-all shadow-sm;
   }
 
   /* Sub Item Status Indicator - Colored bar on the left */
@@ -269,12 +340,14 @@
 
   /* Budget Label */
   .budget-label {
-    @apply text-xs text-gray-400 font-semibold mb-1.5;
+    @apply text-xs text-gray-300 font-semibold mb-1.5;
+    letter-spacing: 0.025em;
   }
 
   /* Budget Value Container */
   .budget-value {
-    @apply text-right min-w-[85px];
+    @apply text-right min-w-[85px] text-gray-100;
+    font-weight: 600;
   }
 
   /* Sub Item Notes Section */
@@ -284,37 +357,152 @@
 
   /* Sub Item Notes Label */
   .sub-item-notes-label {
-    @apply text-xs text-gray-500 font-medium mb-1.5;
+    @apply text-xs text-gray-400 font-medium mb-1.5;
+    letter-spacing: 0.01em;
   }
 
   /* Action Button - Standard action button style */
   .action-btn {
-    @apply p-2 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-all border border-transparent hover:border-gray-600;
+    @apply p-2 rounded-lg text-gray-200 hover:bg-gray-700/60 transition-all border border-transparent hover:border-gray-600/50;
   }
 
   /* Action Button Primary - For primary actions */
   .action-btn-primary {
-    @apply action-btn hover:text-primary-300 hover:bg-primary-500/20 hover:border-primary-500/30;
+    @apply action-btn hover:text-primary-200 hover:bg-primary-500/25 hover:border-primary-500/40;
   }
 
   /* Action Button Danger - For delete/destructive actions */
   .action-btn-danger {
-    @apply action-btn hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/30;
+    @apply action-btn hover:text-red-200 hover:bg-red-500/25 hover:border-red-500/40;
   }
 
   /* Empty State Card */
   .empty-state-card {
-    @apply text-center py-8 text-gray-400 border border-gray-700 rounded-xl bg-gray-800/40;
+    @apply text-center py-12 text-gray-300 border border-gray-700/60 rounded-xl bg-gray-800/50 backdrop-blur-sm;
   }
 
   /* Section Divider */
   .section-divider {
-    @apply border-t border-gray-700;
+    @apply border-t border-gray-700/60;
   }
 
   /* Expandable Section */
   .expandable-section {
     @apply pt-6 mt-6 section-divider;
+  }
+  
+  /* Text colors for better readability */
+  .text-muted {
+    @apply text-gray-400;
+  }
+  
+  .text-subtle {
+    @apply text-gray-300;
+  }
+  
+  .text-strong {
+    @apply text-gray-50 font-semibold;
+  }
+  
+  /* Error and success states */
+  .text-error {
+    @apply text-red-400;
+  }
+  
+  .text-success {
+    @apply text-green-400;
+  }
+  
+  .text-warning {
+    @apply text-yellow-400;
+  }
+  
+  .text-info {
+    @apply text-blue-400;
+  }
+  
+  /* Input error state */
+  .input-error {
+    @apply border-red-500/50 focus:ring-red-500/50 focus:border-red-500/70;
+  }
+  
+  /* Loading spinner */
+  .spinner {
+    @apply animate-spin rounded-full border-2 border-gray-600 border-t-primary-500;
+  }
+  
+  /* Form field group - consistent spacing */
+  .form-group {
+    @apply space-y-1.5;
+  }
+  
+  /* Form section - groups of related fields */
+  .form-section {
+    @apply space-y-4 pb-4 border-b border-gray-700/40 last:border-b-0 last:pb-0;
+  }
+  
+  /* Form grid - for side-by-side fields */
+  .form-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+  }
+  
+  /* Alert messages */
+  .alert {
+    @apply p-3 rounded-lg text-sm font-medium border;
+  }
+  
+  .alert-error {
+    @apply alert bg-red-500/15 border-red-500/40 text-red-300;
+  }
+  
+  .alert-success {
+    @apply alert bg-green-500/15 border-green-500/40 text-green-300;
+  }
+  
+  .alert-warning {
+    @apply alert bg-yellow-500/15 border-yellow-500/40 text-yellow-300;
+  }
+  
+  .alert-info {
+    @apply alert bg-blue-500/15 border-blue-500/40 text-blue-300;
+  }
+  
+  /* Close button for modals */
+  .modal-close-btn {
+    @apply text-gray-400 hover:text-gray-200 transition-colors p-1 hover:bg-gray-700/50 rounded-lg flex-shrink-0;
+  }
+  
+  /* Tag/Button toggle */
+  .tag-toggle {
+    @apply px-3 py-1.5 rounded-full text-sm font-medium transition-all border;
+  }
+  
+  .tag-toggle-active {
+    @apply tag-toggle bg-primary-600/20 text-primary-200 border-primary-500/40;
+  }
+  
+  .tag-toggle-inactive {
+    @apply tag-toggle bg-gray-800/60 text-gray-300 border-gray-600/50 hover:bg-gray-700/60 hover:border-gray-500/50;
+  }
+  
+  /* Checkbox styling */
+  .checkbox {
+    @apply w-4 h-4 text-primary-600 border-gray-600 rounded bg-gray-900/80 focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-0 cursor-pointer;
+  }
+  
+  /* Radio button styling */
+  .radio {
+    @apply w-4 h-4 text-primary-600 border-gray-600 bg-gray-900/80 focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-0 cursor-pointer;
+  }
+  
+  /* Help text */
+  .help-text {
+    @apply text-xs text-gray-400 mt-1;
+  }
+  
+  /* Required field indicator */
+  .required-indicator {
+    @apply text-red-400 ml-1;
   }
 }
 

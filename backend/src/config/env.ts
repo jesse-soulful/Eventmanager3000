@@ -54,21 +54,22 @@ export function validateEnv(): EnvConfig {
   }
 
   // Optional variables with defaults
-  const betterAuthUrl = getEnvVarOptional('BETTER_AUTH_URL', `http://localhost:${port}`);
-  const frontendUrl = getEnvVarOptional('FRONTEND_URL', 'http://localhost:5173');
+  const betterAuthUrl = getEnvVarOptional('BETTER_AUTH_URL', `http://localhost:${port}`) || `http://localhost:${port}`;
+  const frontendUrl = getEnvVarOptional('FRONTEND_URL', 'http://localhost:5173') || 'http://localhost:5173';
   
   // CORS origins - can be comma-separated list or use default
   const corsOrigins = getEnvVarArray('CORS_ORIGINS', [
     'http://localhost:5173',
+    'http://localhost:5174',
     'http://localhost:3000',
     frontendUrl,
   ]);
 
   return {
-    NODE_ENV: nodeEnv,
+    NODE_ENV: nodeEnv || 'development',
     PORT: port,
     DATABASE_URL: databaseUrl,
-    BETTER_AUTH_SECRET: betterAuthSecret,
+    BETTER_AUTH_SECRET: betterAuthSecret || 'dev-secret-key-change-in-production',
     BETTER_AUTH_URL: betterAuthUrl,
     FRONTEND_URL: frontendUrl,
     CORS_ORIGINS: corsOrigins,

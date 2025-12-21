@@ -32,12 +32,21 @@ export function LoginPage() {
 
     try {
       const result = await signIn.email({
-        email,
+        email: email.trim(),
         password,
       });
 
       if (result.error) {
-        setError(result.error.message || 'Failed to sign in');
+        const errorMessage = result.error.message || result.error.toString() || 'Failed to sign in';
+        setError(errorMessage);
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if we got a valid user/session
+      if (!result.data && !result.user) {
+        setError('Invalid email or password. Please check your credentials and try again.');
+        setIsLoading(false);
         return;
       }
 
@@ -45,7 +54,12 @@ export function LoginPage() {
       const from = (location.state as any)?.from?.pathname || '/events';
       navigate(from, { replace: true });
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      console.error('Login error:', err);
+      const errorMessage = err?.response?.data?.error || 
+                          err?.response?.data?.message || 
+                          err?.message || 
+                          'An unexpected error occurred. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -59,11 +73,11 @@ export function LoginPage() {
             <h2 className="mt-6 text-center text-3xl font-extrabold gradient-text">
               Sign in to Event Management 3000
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-400">
+            <p className="mt-2 text-center text-sm text-gray-300">
               Or{' '}
               <a
                 href="/signup"
-                className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
+                className="font-semibold text-primary-400 hover:text-primary-300 transition-colors"
               >
                 create a new account
               </a>
@@ -71,13 +85,13 @@ export function LoginPage() {
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg">
+              <div className="alert-error">
                 {error}
               </div>
             )}
-            <div className="rounded-md shadow-sm -space-y-px">
-              <div>
-                <label htmlFor="email" className="sr-only">
+            <div className="space-y-4">
+              <div className="form-group">
+                <label htmlFor="email" className="label">
                   Email address
                 </label>
                 <input
@@ -86,14 +100,14 @@ export function LoginPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 bg-gray-900/50 placeholder-gray-500 text-gray-100 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                  placeholder="Email address"
+                  className="input"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div>
-                <label htmlFor="password" className="sr-only">
+              <div className="form-group">
+                <label htmlFor="password" className="label">
                   Password
                 </label>
                 <input
@@ -102,11 +116,19 @@ export function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 bg-gray-900/50 placeholder-gray-500 text-gray-100 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                  placeholder="Password"
+                  className="input"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <div className="mt-2 text-right">
+                  <a
+                    href="/forgot-password"
+                    className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+                  >
+                    Forgot password?
+                  </a>
+                </div>
               </div>
             </div>
 

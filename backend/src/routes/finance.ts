@@ -127,7 +127,7 @@ financeRoutes.get('/', async (req, res) => {
     });
 
     // Get sub-line items if needed
-    let allItems = lineItems;
+    let allItems: any[] = lineItems as any[];
     if (includeSubItems) {
       const subItems = await prisma.lineItem.findMany({
         where: {
@@ -142,7 +142,7 @@ financeRoutes.get('/', async (req, res) => {
           },
         },
       });
-      allItems = [...lineItems, ...subItems];
+      allItems = [...lineItems, ...subItems] as any[];
     }
 
     // Calculate totals using plannedCost and actualCost
@@ -162,10 +162,11 @@ financeRoutes.get('/', async (req, res) => {
     // Group by module
     const moduleMap = new Map<ModuleType, { items: any[] }>();
     for (const item of allItems) {
-      if (!moduleMap.has(item.moduleType)) {
-        moduleMap.set(item.moduleType, { items: [] });
+      const moduleType = item.moduleType as ModuleType;
+      if (!moduleMap.has(moduleType)) {
+        moduleMap.set(moduleType, { items: [] });
       }
-      moduleMap.get(item.moduleType)!.items.push(item);
+      moduleMap.get(moduleType)!.items.push(item);
     }
 
     const byModule = Object.values(ModuleType).map(moduleType => {
@@ -424,7 +425,7 @@ financeRoutes.get('/line-items', async (req, res) => {
         eventId: item.eventId,
         eventName: item.Event?.name,
         moduleType: item.moduleType,
-        moduleName: MODULE_DISPLAY_NAMES[item.moduleType],
+        moduleName: MODULE_DISPLAY_NAMES[item.moduleType as ModuleType],
         lineItemName: item.name,
         categoryName: item.Category?.name,
         statusName: item.Status?.name,
@@ -436,7 +437,7 @@ financeRoutes.get('/line-items', async (req, res) => {
         variance: costs.variance,
         isSubLineItem: item.isSubLineItem || false,
         parentLineItemId: item.parentLineItemId,
-        parentLineItemName: item.parentLineItemName,
+        parentLineItemName: (item as any).parentLineItemName || (item as any).LineItem?.name || null,
         date: item.createdAt,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
@@ -650,7 +651,7 @@ financeRoutes.get('/:eventId/line-items', async (req, res) => {
         eventId: item.eventId,
         eventName: item.Event?.name,
       moduleType: item.moduleType,
-      moduleName: MODULE_DISPLAY_NAMES[item.moduleType],
+      moduleName: MODULE_DISPLAY_NAMES[item.moduleType as ModuleType],
       lineItemName: item.name,
       categoryName: item.Category?.name,
       statusName: item.Status?.name,
