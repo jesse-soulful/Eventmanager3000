@@ -188,6 +188,13 @@ statusRoutes.post('/', async (req, res) => {
     res.status(201).json(status);
   } catch (error: any) {
     console.error('❌ Error creating status:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+      code: error?.code,
+      meta: error?.meta,
+    });
     if (error.code === 'P2002') {
       // Prisma unique constraint violation
       return res.status(409).json({ error: 'Status with this name and itemType already exists' });
@@ -196,7 +203,14 @@ statusRoutes.post('/', async (req, res) => {
       // Prisma foreign key constraint violation
       return res.status(404).json({ error: validatedEventId ? `Event with id ${validatedEventId} not found` : 'Invalid event reference' });
     }
-    res.status(500).json({ error: 'Failed to create status', details: error?.message });
+    res.status(500).json({ 
+      error: 'Failed to create status',
+      ...(process.env.NODE_ENV === 'development' && { 
+        details: error?.message,
+        code: error?.code,
+        stack: error?.stack 
+      })
+    });
   }
 });
 

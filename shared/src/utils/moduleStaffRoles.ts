@@ -48,3 +48,4 @@ export function moduleSupportsStaffAssignments(moduleType: ModuleType): boolean 
 
 
 
+

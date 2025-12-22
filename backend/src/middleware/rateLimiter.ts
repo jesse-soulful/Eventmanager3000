@@ -3,13 +3,18 @@ import rateLimit from 'express-rate-limit';
 /**
  * General API rate limiter
  * Limits requests per IP address
+ * More lenient in development to avoid blocking during development
  */
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'production' ? 100 : 500, // Much more lenient in development
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  skip: (req) => {
+    // Skip rate limiting for OPTIONS preflight requests
+    return req.method === 'OPTIONS';
+  },
 });
 
 /**
@@ -53,5 +58,19 @@ export const uploadLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-
+/**
+ * Lenient rate limiter for document GET requests
+ * Allows more requests since these are read-only operations
+ */
+export const documentReadLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: process.env.NODE_ENV === 'production' ? 100 : 200, // Very lenient for development
+  message: 'Too many document requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for OPTIONS preflight requests
+    return req.method === 'OPTIONS';
+  },
+});
 

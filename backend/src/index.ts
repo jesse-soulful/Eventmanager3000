@@ -16,7 +16,7 @@ import { passwordResetRoutes } from './routes/passwordReset';
 import { auth } from './lib/auth';
 import { requireAuth } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
-import { apiLimiter, authLimiter, passwordResetLimiter } from './middleware/rateLimiter';
+import { apiLimiter, authLimiter, passwordResetLimiter, documentReadLimiter } from './middleware/rateLimiter';
 import { env } from './config/env';
 
 const app = express();
@@ -48,10 +48,14 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting - exclude auth routes as they have their own limiter
+// Rate limiting - exclude auth routes and document routes as they have their own limiters
 app.use('/api/', (req, res, next) => {
   // Skip rate limiting for auth routes (they have their own stricter limiter)
   if (req.path.startsWith('/api/auth/')) {
+    return next();
+  }
+  // Skip rate limiting for document routes (they have their own lenient limiter)
+  if (req.path.startsWith('/api/documents/')) {
     return next();
   }
   apiLimiter(req, res, next);
@@ -201,7 +205,7 @@ app.use('/api/categories', requireAuth, categoryRoutes);
 app.use('/api/tags', requireAuth, tagRoutes);
 app.use('/api/finance', requireAuth, financeRoutes);
 app.use('/api/sub-line-item-types', requireAuth, subLineItemTypeRoutes);
-app.use('/api/documents', requireAuth, documentRoutes);
+app.use('/api/documents', requireAuth, documentReadLimiter, documentRoutes);
 app.use('/api/comments', requireAuth, commentRoutes);
 app.use('/api/users', requireAuth, userRoutes);
 

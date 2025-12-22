@@ -74,3 +74,4 @@ DATABASE_URL="file:./prisma/dev.db" npx prisma generate
 npm run dev
 ```
 
+

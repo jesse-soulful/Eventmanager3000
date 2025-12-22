@@ -96,3 +96,4 @@ Watch the backend console for:
 
 The main issue was a **version mismatch between Prisma CLI and Prisma Client**. This has been fixed. The server needs to be restarted to load the corrected Prisma Client.
 
+

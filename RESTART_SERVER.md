@@ -50,3 +50,4 @@ After restarting, the Prisma error should be gone. If you still see errors:
 1. Check the backend console for new error messages
 2. Share the error output so we can debug further
 
+
